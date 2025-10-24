@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { PlusIcon, Spinner, CameraIcon, SparklesIcon, ClipboardCheckIcon } from './Icons';
+import { PlusIcon, Spinner, CameraIcon, SparklesIcon, ClipboardCheckIcon, StarIcon } from './Icons';
 import type { User, CivicIssue } from '../types';
 import { IssueStatus } from '../types';
 import * as issueService from '../services/issueService';
@@ -26,7 +26,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, currentU
   useEffect(() => {
     const fetchSamples = async () => {
       try {
-        const issues = await issueService.getSampleIssues();
+        const issues = await issueService.getResolvedSampleIssues();
         setSampleIssues(issues);
       } catch (e) {
         console.error("Failed to fetch sample issues", e);
@@ -159,9 +159,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, currentU
                  <div className="items-center flex flex-wrap">
                      <div className="w-full ml-auto mr-auto px-4 text-center">
                          <div>
-                             <h3 className="text-3xl font-semibold text-gray-800 dark:text-white">Issues in Progress</h3>
+                             <h3 className="text-3xl font-semibold text-gray-800 dark:text-white">Recently Resolved Issues</h3>
                              <p className="mt-4 text-lg leading-relaxed text-gray-600 dark:text-gray-400">
-                                 Here's a live look at some of the issues currently being addressed by our dedicated teams.
+                                 Transparency in action. Here are some of the recent issues resolved in our community.
                              </p>
                          </div>
                      </div>
@@ -176,7 +176,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, currentU
                                 <div key={issue.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden flex flex-col">
                                     <img src={issue.photoUrl} alt={issue.title} className="w-full h-48 object-cover" />
                                     <div className="p-4 flex flex-col flex-grow">
-                                        <div className="flex justify-between items-center">
+                                        <div className="flex justify-between items-start">
                                             <span className="text-sm font-semibold text-indigo-600 dark:text-indigo-400">{issue.category}</span>
                                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${styles.bg} ${styles.text}`}>
                                                 {issue.status}
@@ -184,13 +184,21 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, currentU
                                         </div>
                                         <h3 className="mt-2 text-lg font-bold text-gray-900 dark:text-white">{issue.title}</h3>
                                         <p className="mt-1 text-sm text-gray-600 dark:text-gray-400 flex-grow">{issue.description.substring(0, 100)}...</p>
+                                        {issue.status === IssueStatus.Resolved && issue.rating && (
+                                          <div className="flex items-center mt-2">
+                                              <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 mr-1">Citizen Rating: </span>
+                                              {[...Array(5)].map((_, i) => (
+                                                  <StarIcon key={i} className="h-4 w-4 text-yellow-400" fill={i < issue.rating! ? 'currentColor' : 'none'} />
+                                              ))}
+                                          </div>
+                                        )}
                                     </div>
                                 </div>
                              );
                         })}
                     </div>
                  ) : (
-                    <p className="text-center mt-8 text-gray-500 dark:text-gray-400">No issues are currently in progress.</p>
+                    <p className="text-center mt-8 text-gray-500 dark:text-gray-400">No issues have been resolved recently.</p>
                  )}
              </div>
         </section>

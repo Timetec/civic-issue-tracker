@@ -92,6 +92,40 @@ const initializeData = () => {
                 { id: generateId(), authorId: 'worker@example.com', authorName: 'John Worker', text: 'Added to my route for tonight.', createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000) }
             ]
         },
+        {
+            id: generateId(),
+            title: 'Overflowing Trash Can at Park Entrance',
+            description: 'The trash can at the main entrance to Central Park is completely full and overflowing. Needs to be emptied.',
+            category: 'Garbage',
+            photoUrl: 'https://placehold.co/600x400/cccccc/000000/png?text=Garbage',
+            location: { lat: 34.156, lng: -118.350 },
+            status: IssueStatus.Resolved,
+            createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
+            reporterId: 'citizen@example.com',
+            reporterName: 'Jane Citizen',
+            assignedTo: 'worker2@example.com',
+            assignedToName: 'Maria Garcia',
+            comments: [
+                 { id: generateId(), authorId: 'worker2@example.com', authorName: 'Maria Garcia', text: 'Cleaned up.', createdAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000) }
+            ],
+            rating: 5,
+        },
+        {
+            id: generateId(),
+            title: 'Damaged Stop Sign',
+            description: 'The stop sign at the corner of Pine and 3rd is bent and hard to see.',
+            category: 'Damaged Signage',
+            photoUrl: 'https://placehold.co/600x400/cccccc/000000/png?text=Signage',
+            location: { lat: 34.051, lng: -118.240 },
+            status: IssueStatus.Resolved,
+            createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000), // 10 days ago
+            reporterId: 'citizen@example.com',
+            reporterName: 'Jane Citizen',
+            assignedTo: 'worker@example.com',
+            assignedToName: 'John Worker',
+            comments: [],
+            rating: 4,
+        }
     ];
   };
 
@@ -202,6 +236,15 @@ export const apiGetSampleIssues = (): Promise<CivicIssue[]> => {
     return simulateApi(() => {
         return getIssues()
             .filter(issue => issue.status === IssueStatus.InProgress)
+            .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+            .slice(0, 3);
+    });
+};
+
+export const apiGetResolvedSampleIssues = (): Promise<CivicIssue[]> => {
+    return simulateApi(() => {
+        return getIssues()
+            .filter(issue => issue.status === IssueStatus.Resolved)
             .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
             .slice(0, 3);
     });

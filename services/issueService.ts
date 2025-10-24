@@ -12,6 +12,10 @@ export const getSampleIssues = (): Promise<CivicIssue[]> => {
     return api.apiGetSampleIssues();
 };
 
+export const getResolvedSampleIssues = (): Promise<CivicIssue[]> => {
+    return api.apiGetResolvedSampleIssues();
+};
+
 export const getMyReportedIssues = (): Promise<CivicIssue[]> => {
   const currentUser = authService.getCurrentUser();
   if (!currentUser) {
