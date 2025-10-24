@@ -1,22 +1,45 @@
+
 import React from 'react';
 import { PlusIcon } from './Icons';
+import type { User } from '../types';
 
 interface LandingPageProps {
   onGetStarted: () => void;
+  currentUser?: Omit<User, 'password'> | null;
+  onGoToDashboard?: () => void;
+  onLogout?: () => void;
+  onReportIssueNow?: () => void;
 }
 
-export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
+export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, currentUser, onGoToDashboard, onLogout, onReportIssueNow }) => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
       <header className="absolute top-0 left-0 right-0 z-10">
         <nav className="container mx-auto px-6 py-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">Civic Issue Tracker</h1>
-          <button 
-            onClick={onGetStarted}
-            className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-          >
-            Login / Sign Up
-          </button>
+          {currentUser && onGoToDashboard && onLogout ? (
+            <div className="flex items-center space-x-4">
+              <button 
+                onClick={onGoToDashboard}
+                className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              >
+                Go to Dashboard
+              </button>
+              <button 
+                onClick={onLogout}
+                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+              >
+                Logout
+              </button>
+            </div>
+          ) : (
+            <button 
+              onClick={onGetStarted}
+              className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+              Login / Sign Up
+            </button>
+          )}
         </nav>
       </header>
       
@@ -38,7 +61,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
                       Our platform connects you with local authorities to get things fixed, fast.
                     </p>
                     <button 
-                      onClick={onGetStarted}
+                      onClick={currentUser && onReportIssueNow ? onReportIssueNow : onGetStarted}
                       className="mt-12 px-8 py-4 text-lg font-bold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 inline-flex items-center"
                     >
                       <PlusIcon className="h-6 w-6 mr-2" />

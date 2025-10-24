@@ -2,18 +2,16 @@ import React, { useState, useMemo } from 'react';
 import type { CivicIssue, User } from '../types';
 import { IssueStatus } from '../types';
 import { IssueCard } from './IssueCard';
-import { PlusIcon } from './Icons';
 
 interface IssueDashboardProps {
   issues: CivicIssue[];
   onAdminUpdateStatus: (id: string, newStatus: IssueStatus) => void;
   currentUser: User;
-  onReportIssueClick: () => void;
 }
 
 const statusOptions = [null, ...Object.values(IssueStatus)];
 
-export const IssueDashboard: React.FC<IssueDashboardProps> = ({ issues, onAdminUpdateStatus, currentUser, onReportIssueClick }) => {
+export const IssueDashboard: React.FC<IssueDashboardProps> = ({ issues, onAdminUpdateStatus, currentUser }) => {
   const [filter, setFilter] = useState<IssueStatus | null>(null);
 
   const filteredIssues = useMemo(() => {
@@ -27,15 +25,8 @@ export const IssueDashboard: React.FC<IssueDashboardProps> = ({ issues, onAdminU
 
   return (
     <div className="p-4 md:p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
-      <div className="mb-6 flex justify-between items-center flex-wrap gap-4">
+      <div className="mb-6">
         <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Civic Issues Dashboard</h2>
-        <button
-          onClick={onReportIssueClick}
-          className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 flex items-center"
-        >
-          <PlusIcon className="h-5 w-5 mr-2" />
-          Report New Issue
-        </button>
       </div>
 
       <div className="mb-6">

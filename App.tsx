@@ -8,6 +8,7 @@ import { LoginPage } from './components/LoginPage';
 import * as authService from './services/authService';
 import * as issueService from './services/issueService';
 import { Modal } from './components/Modal';
+import { PlusIcon } from './components/Icons';
 
 type AppView = 'landing' | 'login' | 'app';
 
@@ -23,22 +24,28 @@ const App: React.FC = () => {
     const user = authService.getCurrentUser();
     if (user) {
       setCurrentUser(user);
-      setView('app');
-    } else {
-        setView('landing');
+      // Stay on landing page by default, don't jump to app
+      // setView('app');
     }
+    setView('landing'); // Always start at landing
     setIsLoading(false);
   }, []);
   
   useEffect(() => {
-    if (view === 'app') {
+    if (view === 'app' && currentUser) {
       fetchIssues();
     }
-  }, [view]);
+  }, [view, currentUser]);
 
   const fetchIssues = async () => {
-    const fetchedIssues = await issueService.getIssues();
-    setIssues(fetchedIssues);
+    try {
+      const fetchedIssues = await issueService.getIssues();
+      setIssues(fetchedIssues);
+    } catch (error) {
+      console.error("Failed to fetch issues:", error);
+      // If token is invalid or expired, log out user
+      handleLogout();
+    }
   };
 
   const handleLogin = async (email: string, pass: string): Promise<boolean> => {
@@ -71,10 +78,8 @@ const App: React.FC = () => {
     if (!currentUser) return;
     setIsSubmitting(true);
     try {
-      const newIssue = await issueService.addIssue(description, photo, location, {
-        id: currentUser.email,
-        name: `${currentUser.firstName} ${currentUser.lastName}`
-      });
+      // The user's identity is determined by the auth token on the backend, so we don't need to pass it here.
+      const newIssue = await issueService.addIssue(description, photo, location);
       setIssues(prevIssues => [newIssue, ...prevIssues]);
       setIsFormModalOpen(false); // Close modal on success
     } catch (error) {
@@ -95,12 +100,23 @@ const App: React.FC = () => {
     }
   };
 
+  const handleOpenReportModal = () => {
+    setView('app');
+    setIsFormModalOpen(true);
+  };
+
   if (isLoading) {
     return <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center"><p className="text-gray-500">Loading...</p></div>;
   }
 
   if (view === 'landing') {
-    return <LandingPage onGetStarted={() => setView('login')} />;
+    return <LandingPage 
+        onGetStarted={() => setView('login')} 
+        currentUser={currentUser}
+        onGoToDashboard={() => setView('app')}
+        onLogout={handleLogout}
+        onReportIssueNow={handleOpenReportModal}
+    />;
   }
   
   if (view === 'login') {
@@ -110,14 +126,32 @@ const App: React.FC = () => {
   if (view === 'app' && currentUser) {
     return (
       <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
-        <header className="bg-white dark:bg-gray-800 shadow-md">
+        <header className="bg-white dark:bg-gray-800 shadow-md sticky top-0 z-40">
           <nav className="container mx-auto px-6 py-3 flex justify-between items-center">
-            <h1 className="text-xl font-bold text-indigo-600 dark:text-indigo-400">Civic Issue Tracker</h1>
-            <div>
-              <span className="text-gray-700 dark:text-gray-300 mr-4">Welcome, {currentUser.firstName}!</span>
+            <h1 className="text-xl font-bold text-indigo-600 dark:text-indigo-400">
+              <a
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setView('landing');
+                }}
+                className="hover:underline focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 rounded"
+              >
+                Civic Issue Tracker
+              </a>
+            </h1>
+            <div className="flex items-center space-x-4">
+              <span className="text-gray-700 dark:text-gray-300 hidden sm:inline">Welcome, {currentUser.firstName}!</span>
+               <button
+                onClick={() => setIsFormModalOpen(true)}
+                className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 flex items-center"
+              >
+                <PlusIcon className="h-5 w-5 mr-2" />
+                Report Issue
+              </button>
               <button
                 onClick={handleLogout}
-                className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
               >
                 Logout
               </button>
@@ -129,7 +163,6 @@ const App: React.FC = () => {
             issues={issues}
             onAdminUpdateStatus={handleAdminUpdateStatus}
             currentUser={currentUser}
-            onReportIssueClick={() => setIsFormModalOpen(true)}
           />
         </main>
 
