@@ -1,4 +1,5 @@
 import type { User } from '../types';
+import { UserRole } from '../types';
 import * as api from './mockApi';
 
 const AUTH_TOKEN_KEY = 'civic_issue_auth_token';
@@ -7,42 +8,32 @@ const AUTH_TOKEN_KEY = 'civic_issue_auth_token';
 // In a real app, you would use a library like jwt-decode for standard JWTs.
 const decodeToken = (token: string): Omit<User, 'password'> | null => {
   try {
-    // This app uses a simple mock token format: "mock-token-for-email-firstName-lastName"
-    if (token.startsWith('mock-token-for-')) {
-      const tokenData = token.substring('mock-token-for-'.length);
-      const parts = tokenData.split('-');
-
-      // We assume names do not contain hyphens and are the last two parts.
-      // This logic is now robust enough to handle emails that may contain hyphens.
-      if (parts.length < 3) {
-        console.error("Invalid mock token structure.");
-        return null;
-      }
-
-      const lastName = parts[parts.length - 1];
-      const firstName = parts[parts.length - 2];
-      const email = parts.slice(0, parts.length - 2).join('-');
-
-      return {
-        email,
-        firstName,
-        lastName,
-        mobileNumber: '', // mobileNumber is part of the User type, default to empty.
-      };
-    }
-
-    // The previous logic for JWTs was incorrect and caused the 'atob' error.
-    // Since the app only uses the mock format, we'll reject any other format.
-    console.error("Unrecognized token format.");
-    return null;
-
+    // New token format: base64 encoded JSON string of the user object
+    return JSON.parse(atob(token));
   } catch (error) {
-    console.error("An unexpected error occurred while decoding token", error);
-    return null;
+    // Fallback for old token format for graceful migration
+     try {
+        if (token.startsWith('mock-token-for-')) {
+            const tokenData = token.substring('mock-token-for-'.length);
+            const parts = tokenData.split('-');
+            if (parts.length < 4) return null;
+
+            const role = parts.pop() as UserRole;
+            const lastName = parts.pop();
+            const firstName = parts.pop();
+            const email = parts.join('-');
+
+            return { email, firstName, lastName, role } as Omit<User, 'password'>;
+        }
+        return null;
+     } catch (fallbackError) {
+        console.error("Failed to decode token with primary and fallback methods", fallbackError);
+        return null;
+     }
   }
 };
 
-export const registerUser = async (data: Omit<User, 'email'> & {email: string, password: string}): Promise<Omit<User, 'password'> | null> => {
+export const registerUser = async (data: Omit<User, 'email' | 'role'> & {email: string, password: string}): Promise<Omit<User, 'password'> | null> => {
   try {
     const { user, token } = await api.apiRegister(data);
     localStorage.setItem(AUTH_TOKEN_KEY, token);
@@ -72,9 +63,19 @@ export const getCurrentUser = (): Omit<User, 'password'> | null => {
   const token = getToken();
   if (!token) return null;
   
-  return decodeToken(token);
+  const user = decodeToken(token);
+  if (!user) {
+    // If decoding fails, the token is invalid, so remove it.
+    logoutUser();
+    return null;
+  }
+  return user;
 };
 
 export const getToken = (): string | null => {
     return localStorage.getItem(AUTH_TOKEN_KEY);
+}
+
+export const updateUserToken = (token: string) => {
+    localStorage.setItem(AUTH_TOKEN_KEY, token);
 }

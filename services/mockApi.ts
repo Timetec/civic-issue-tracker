@@ -1,165 +1,443 @@
-import type { CivicIssue, User } from '../types';
-import { IssueStatus } from '../types';
+// This is a mock API to simulate a backend.
+// It uses localStorage to persist data across browser reloads.
 
-// Initialize with some mock data if localStorage is empty
+import type { CivicIssue, User, Comment } from '../types';
+import { IssueStatus, UserRole } from '../types';
+
+const USERS_KEY = 'civic_issue_tracker_users';
+const ISSUES_KEY = 'civic_issue_tracker_issues';
+
+// Helper to generate a short random ID
+const generateId = () => Math.random().toString(36).substring(2, 10);
+
+// Helper to calculate distance between two lat/lng points
+const getDistance = (loc1: {lat: number, lng: number}, loc2: {lat: number, lng: number}) => {
+    const R = 6371; // Radius of the earth in km
+    const dLat = (loc2.lat - loc1.lat) * (Math.PI / 180);
+    const dLon = (loc2.lng - loc1.lng) * (Math.PI / 180);
+    const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(loc1.lat * (Math.PI / 180)) * Math.cos(loc2.lat * (Math.PI / 180)) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c; // Distance in km
+};
+
+const omitPassword = (user: User): Omit<User, 'password'> => {
+    const { password, ...rest } = user;
+    return rest;
+};
+
+// --- Data Initialization ---
 const initializeData = () => {
-  if (!localStorage.getItem('civic_issues')) {
-    const mockIssues: CivicIssue[] = [
-      {
-        id: '1',
-        title: 'Large Pothole on Main St',
-        description: 'A large and dangerous pothole has formed in the eastbound lane of Main St, just before the intersection with Oak Ave.',
-        category: 'Pothole',
-        photoUrl: 'https://images.unsplash.com/photo-1599389392885-2023a6358178?q=80&w=800&auto=format&fit=crop',
-        location: { lat: 34.0522, lng: -118.2437 },
-        status: IssueStatus.Pending,
-        createdAt: new Date(Date.now() - 86400000 * 2), // 2 days ago
-        reporterId: 'admin@example.com',
-        reporterName: 'Admin User',
-      },
-      {
-        id: '2',
-        title: 'Graffiti on Park Bench',
-        description: 'The main bench near the playground in Central Park has been vandalized with spray paint.',
-        category: 'Graffiti',
-        photoUrl: 'https://images.unsplash.com/photo-1618331835712-40413159d3a3?q=80&w=800&auto=format&fit=crop',
-        location: { lat: 34.055, lng: -118.245 },
-        status: IssueStatus.InProgress,
-        createdAt: new Date(Date.now() - 86400000), // 1 day ago
-        reporterId: 'jane.doe@example.com',
-        reporterName: 'Jane Doe',
-      },
-       {
-        id: '3',
-        title: 'Streetlight Out on 5th Ave',
-        description: 'The streetlight at the corner of 5th and Pine is out. It is very dark at night and feels unsafe.',
-        category: 'Streetlight',
-        photoUrl: 'https://images.unsplash.com/photo-1603525549332-06741a4561f2?q=80&w=800&auto=format&fit=crop',
-        location: { lat: 34.058, lng: -118.250 },
-        status: IssueStatus.Resolved,
-        createdAt: new Date(Date.now() - 86400000 * 5), // 5 days ago
-        reporterId: 'jane.doe@example.com',
-        reporterName: 'Jane Doe',
-      },
+  const seedUsers = (): User[] => {
+    return [
+      { email: 'citizen@example.com', password: 'password123', firstName: 'Jane', lastName: 'Citizen', mobileNumber: '555-0101', role: UserRole.Citizen },
+      { email: 'worker@example.com', password: 'password123', firstName: 'John', lastName: 'Worker', mobileNumber: '555-0102', role: UserRole.Worker, location: { lat: 34.0522, lng: -118.2437 } },
+      { email: 'worker2@example.com', password: 'password123', firstName: 'Maria', lastName: 'Garcia', mobileNumber: '555-0105', role: UserRole.Worker, location: { lat: 34.1522, lng: -118.3437 } },
+      { email: 'admin@example.com', password: 'password123', firstName: 'Admin', lastName: 'User', mobileNumber: '555-0103', role: UserRole.Admin },
+      { email: 'service@example.com', password: 'password123', firstName: 'Service', lastName: 'Desk', mobileNumber: '555-0104', role: UserRole.Service },
     ];
-    localStorage.setItem('civic_issues', JSON.stringify(mockIssues.map(issue => ({...issue, createdAt: issue.createdAt.toISOString()}))));
-  }
+  };
 
-  if (!localStorage.getItem('civic_users')) {
-    const mockUsers: User[] = [
-        { email: 'admin@example.com', password: 'password123', firstName: 'Admin', lastName: 'User', mobileNumber: '555-123-4567' },
-        { email: 'jane.doe@example.com', password: 'password123', firstName: 'Jane', lastName: 'Doe', mobileNumber: '555-987-6543' },
+  const seedIssues = (): CivicIssue[] => {
+    return [
+        {
+            id: generateId(),
+            title: 'Large Pothole on Main St',
+            description: 'A very large and dangerous pothole has formed in the eastbound lane of Main St, just past the intersection with Oak Ave.',
+            category: 'Pothole',
+            photoUrl: 'https://placehold.co/600x400/cccccc/000000/png?text=Pothole',
+            location: { lat: 34.055, lng: -118.245 },
+            status: IssueStatus.InProgress,
+            createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
+            reporterId: 'citizen@example.com',
+            reporterName: 'Jane Citizen',
+            assignedTo: 'worker@example.com',
+            assignedToName: 'John Worker',
+            comments: [
+                { id: generateId(), authorId: 'admin@example.com', authorName: 'Admin User', text: 'John, please take a look at this.', createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000 + 10000) },
+                { id: generateId(), authorId: 'worker@example.com', authorName: 'John Worker', text: 'On it. Will inspect this afternoon.', createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000) }
+            ]
+        },
+        {
+            id: generateId(),
+            title: 'Graffiti on Park Wall',
+            description: 'The main wall of Central Park has been vandalized with spray paint.',
+            category: 'Graffiti',
+            photoUrl: 'https://placehold.co/600x400/cccccc/000000/png?text=Graffiti',
+            location: { lat: 34.155, lng: -118.349 },
+            status: IssueStatus.InProgress,
+            createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
+            reporterId: 'citizen@example.com',
+            reporterName: 'Jane Citizen',
+            assignedTo: 'worker2@example.com',
+            assignedToName: 'Maria Garcia',
+            comments: []
+        },
+         {
+            id: generateId(),
+            title: 'Flickering Streetlight',
+            description: 'The streetlight at the corner of 5th and Elm is flickering constantly and needs to be replaced.',
+            category: 'Streetlight',
+            photoUrl: 'https://placehold.co/600x400/cccccc/000000/png?text=Streetlight',
+            location: { lat: 34.06, lng: -118.25 },
+            status: IssueStatus.InProgress,
+            createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
+            reporterId: 'citizen@example.com',
+            reporterName: 'Jane Citizen',
+            assignedTo: 'worker@example.com',
+            assignedToName: 'John Worker',
+            comments: [
+                { id: generateId(), authorId: 'worker@example.com', authorName: 'John Worker', text: 'Added to my route for tonight.', createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000) }
+            ]
+        },
     ];
-    localStorage.setItem('civic_users', JSON.stringify(mockUsers));
+  };
+
+  if (!localStorage.getItem(USERS_KEY)) {
+    localStorage.setItem(USERS_KEY, JSON.stringify(seedUsers()));
+  }
+  if (!localStorage.getItem(ISSUES_KEY)) {
+    localStorage.setItem(ISSUES_KEY, JSON.stringify(seedIssues()));
   }
 };
 
-initializeData();
 
-const getUsers = (): User[] => JSON.parse(localStorage.getItem('civic_users') || '[]');
+// --- Data Accessors ---
+const getUsers = (): User[] => JSON.parse(localStorage.getItem(USERS_KEY) || '[]');
 const getIssues = (): CivicIssue[] => {
-    const issues = JSON.parse(localStorage.getItem('civic_issues') || '[]');
-    return issues.map((issue: any) => ({ ...issue, createdAt: new Date(issue.createdAt) }));
+    const issues = JSON.parse(localStorage.getItem(ISSUES_KEY) || '[]');
+    // Dates are stored as strings in JSON, so we need to convert them back
+    return issues.map((issue: any) => ({
+        ...issue,
+        createdAt: new Date(issue.createdAt),
+        comments: issue.comments.map((c: any) => ({ ...c, createdAt: new Date(c.createdAt) })),
+    }));
 };
+const saveUsers = (users: User[]) => localStorage.setItem(USERS_KEY, JSON.stringify(users));
+const saveIssues = (issues: CivicIssue[]) => localStorage.setItem(ISSUES_KEY, JSON.stringify(issues));
 
-const saveUsers = (users: User[]) => localStorage.setItem('civic_users', JSON.stringify(users));
-const saveIssues = (issues: CivicIssue[]) => localStorage.setItem('civic_issues', JSON.stringify(issues.map(issue => ({...issue, createdAt: issue.createdAt.toISOString()}))));
+const ensureAdminUser = () => {
+    let users = getUsers();
+    let admin = users.find(u => u.email === 'admin@example.com');
+    if (admin) {
+        if (admin.password !== 'password123' || admin.role !== UserRole.Admin) {
+            admin.password = 'password123';
+            admin.role = UserRole.Admin;
+            saveUsers(users);
+        }
+    } else {
+        users.push({ email: 'admin@example.com', password: 'password123', firstName: 'Admin', lastName: 'User', mobileNumber: '555-0103', role: UserRole.Admin });
+        saveUsers(users);
+    }
+}
 
+// Call initialization and ensure admin exists
+initializeData();
+ensureAdminUser();
 
 // --- API Functions ---
 
-export const apiRegister = (data: Omit<User, 'email'> & { email: string; password: string }): Promise<{ user: Omit<User, 'password'>, token: string }> => {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      const users = getUsers();
-      if (users.find(u => u.email === data.email)) {
-        return reject(new Error('User already exists.'));
-      }
-      if (data.password.length < 8) {
-        return reject(new Error('Password must be at least 8 characters.'));
-      }
-      const newUser: User = { ...data };
-      users.push(newUser);
-      saveUsers(users);
-
-      const { password, ...userWithoutPassword } = newUser;
-      const token = `mock-token-for-${userWithoutPassword.email}-${userWithoutPassword.firstName}-${userWithoutPassword.lastName}`;
-      resolve({ user: userWithoutPassword, token });
-    }, 500);
-  });
-};
-
-export const apiLogin = (email: string, pass: string): Promise<{ user: Omit<User, 'password'>, token: string }> => {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      const users = getUsers();
-      const user = users.find(u => u.email === email && u.password === pass);
-      if (user) {
-        const { password, ...userWithoutPassword } = user;
-        const token = `mock-token-for-${userWithoutPassword.email}-${userWithoutPassword.firstName}-${userWithoutPassword.lastName}`;
-        resolve({ user: userWithoutPassword, token });
-      } else {
-        reject(new Error('Invalid credentials.'));
-      }
-    }, 500);
-  });
-};
-
-export const apiGetIssues = (): Promise<CivicIssue[]> => {
-    return new Promise((resolve) => {
+// Wrap functions in a delay to simulate network latency
+const simulateApi = <T>(fn: () => T, delay = 500): Promise<T> => {
+    return new Promise((resolve, reject) => {
         setTimeout(() => {
-            resolve(getIssues());
-        }, 300);
+            try {
+                resolve(fn());
+            } catch (error) {
+                reject(error);
+            }
+        }, delay);
     });
 };
 
-export const apiAddIssue = (issueData: Omit<CivicIssue, 'id' | 'createdAt' | 'status'>): Promise<CivicIssue> => {
+const createToken = (user: Omit<User, 'password'>) => {
+    try {
+        return btoa(JSON.stringify(user));
+    } catch (e) {
+        // Fallback for environments where btoa might not be available or fails
+        console.error("btoa failed, using fallback token", e);
+        return `mock-token-for-${user.email}-${user.firstName}-${user.lastName}-${user.role}`;
+    }
+};
+
+
+// --- AUTH ---
+export const apiRegister = (data: Omit<User, 'role'> & { email: string, password: string }): Promise<{ user: Omit<User, 'password'>, token: string }> => {
+    return simulateApi(() => {
+        const users = getUsers();
+        if (users.some(u => u.email === data.email)) {
+            throw new Error('User with this email already exists.');
+        }
+        if (data.password.length < 8) {
+            throw new Error('Password must be at least 8 characters long.');
+        }
+        const newUser: User = { ...data, role: UserRole.Citizen }; // Default role
+        users.push(newUser);
+        saveUsers(users);
+        const userToEncode = omitPassword(newUser);
+        const token = createToken(userToEncode);
+        return { user: userToEncode, token };
+    });
+};
+
+export const apiLogin = (email: string, password: string): Promise<{ user: Omit<User, 'password'>, token: string }> => {
+    return simulateApi(() => {
+        const users = getUsers();
+        const user = users.find(u => u.email === email && u.password === password);
+        if (!user) {
+            throw new Error('Invalid email or password.');
+        }
+        const userToEncode = omitPassword(user);
+        const token = createToken(userToEncode);
+        return { user: userToEncode, token };
+    });
+};
+
+// --- ISSUES ---
+export const apiGetIssues = (): Promise<CivicIssue[]> => simulateApi(() => getIssues());
+
+export const apiGetSampleIssues = (): Promise<CivicIssue[]> => {
+    return simulateApi(() => {
+        return getIssues()
+            .filter(issue => issue.status === IssueStatus.InProgress)
+            .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+            .slice(0, 3);
+    });
+};
+
+export const apiGetMyReportedIssues = (email: string): Promise<CivicIssue[]> => {
+    return simulateApi(() => getIssues().filter(issue => issue.reporterId === email));
+};
+
+export const apiGetMyAssignedIssues = (email: string): Promise<CivicIssue[]> => {
+    return simulateApi(() => getIssues().filter(issue => issue.assignedTo === email));
+};
+
+export const apiGetIssueById = (id: string): Promise<CivicIssue> => {
+    return simulateApi(() => {
+        const issue = getIssues().find(i => i.id === id);
+        if (!issue) throw new Error("Issue not found.");
+        return issue;
+    });
+};
+
+export const apiGetIssuesByUser = (searchTerm: string): Promise<CivicIssue[]> => {
+    return simulateApi(() => {
+        const lowerCaseSearch = searchTerm.toLowerCase();
+        const user = getUsers().find(u => u.email.toLowerCase() === lowerCaseSearch || u.mobileNumber === lowerCaseSearch);
+        if (!user) return [];
+        return getIssues().filter(issue => issue.reporterId === user.email);
+    });
+};
+
+export const apiUploadPhoto = (file: File): Promise<string> => {
+    // In a real app, this would upload to a cloud service. Here, we just return a data URL.
     return new Promise((resolve) => {
-        setTimeout(() => {
-            const issues = getIssues();
-            const newIssue: CivicIssue = {
-                ...issueData,
-                id: new Date().getTime().toString(),
-                createdAt: new Date(),
-                status: IssueStatus.Pending,
-            };
-            issues.push(newIssue);
-            saveIssues(issues);
-            resolve(newIssue);
-        }, 500);
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.readAsDataURL(file);
+    });
+};
+
+export const apiAddIssue = (
+    issueData: Omit<CivicIssue, 'id' | 'status' | 'createdAt' | 'comments' | 'rating'>
+): Promise<CivicIssue> => {
+    return simulateApi(() => {
+        const issues = getIssues();
+        const users = getUsers();
+        const workers = users.filter(u => u.role === UserRole.Worker && u.location);
+        
+        let assignedTo: string | undefined = undefined;
+        let assignedToName: string | undefined = undefined;
+
+        // Auto-assign to the nearest worker
+        if (workers.length > 0) {
+            let closestWorker = workers[0];
+            let minDistance = Infinity;
+
+            for (const worker of workers) {
+                if (worker.location) {
+                    const distance = getDistance(issueData.location, worker.location);
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        closestWorker = worker;
+                    }
+                }
+            }
+            assignedTo = closestWorker.email;
+            assignedToName = `${closestWorker.firstName} ${closestWorker.lastName}`;
+        }
+        
+        const newIssue: CivicIssue = {
+            ...issueData,
+            id: generateId(),
+            status: assignedTo ? IssueStatus.Pending : IssueStatus.Pending,
+            createdAt: new Date(),
+            comments: [],
+        };
+
+        issues.push(newIssue);
+        saveIssues(issues);
+        return newIssue;
     });
 };
 
 export const apiUpdateIssueStatus = (id: string, newStatus: IssueStatus): Promise<CivicIssue> => {
-    return new Promise((resolve, reject) => {
-        setTimeout(() => {
-            const issues = getIssues();
-            const issueIndex = issues.findIndex(i => i.id === id);
-            if (issueIndex > -1) {
-                issues[issueIndex].status = newStatus;
-                saveIssues(issues);
-                resolve(issues[issueIndex]);
-            } else {
-                reject(new Error("Issue not found."));
-            }
-        }, 300);
+    return simulateApi(() => {
+        const issues = getIssues();
+        const issueIndex = issues.findIndex(i => i.id === id);
+        if (issueIndex === -1) throw new Error('Issue not found.');
+        
+        issues[issueIndex].status = newStatus;
+        saveIssues(issues);
+        return issues[issueIndex];
     });
 };
 
-// Mock function for uploading a photo
-// In a real app, this would upload to a cloud service and return a URL
-export const apiUploadPhoto = (photo: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-        setTimeout(() => {
-            // Convert the file to a Base64 Data URL for persistent storage
-            const reader = new FileReader();
-            reader.onload = () => {
-                resolve(reader.result as string);
-            };
-            reader.onerror = (error) => {
-                reject(error);
-            };
-            reader.readAsDataURL(photo);
-        }, 500);
+export const apiCitizenResolveIssue = (issueId: string, rating: number, reporterId: string): Promise<CivicIssue> => {
+    return simulateApi(() => {
+        const issues = getIssues();
+        const issueIndex = issues.findIndex(i => i.id === issueId);
+        if (issueIndex === -1) throw new Error('Issue not found.');
+        
+        const issue = issues[issueIndex];
+        if (issue.reporterId !== reporterId) {
+            throw new Error('Only the original reporter can resolve this issue.');
+        }
+        if (issue.status !== IssueStatus.ForReview) {
+            throw new Error('Issue must be in "For Review" status to be resolved by a citizen.');
+        }
+        if (rating < 1 || rating > 5) {
+            throw new Error('Rating must be between 1 and 5.');
+        }
+
+        issue.status = IssueStatus.Resolved;
+        issue.rating = rating;
+        saveIssues(issues);
+        return issue;
     });
-}
+};
+
+export const apiAdminAssignIssue = (issueId: string, workerEmail: string): Promise<CivicIssue> => {
+    return simulateApi(() => {
+        const issues = getIssues();
+        const users = getUsers();
+        const issueIndex = issues.findIndex(i => i.id === issueId);
+        if (issueIndex === -1) throw new Error('Issue not found.');
+
+        const worker = users.find(u => u.email === workerEmail && u.role === UserRole.Worker);
+        if (!worker && workerEmail) throw new Error('Worker not found.');
+
+        issues[issueIndex].assignedTo = worker ? worker.email : undefined;
+        issues[issueIndex].assignedToName = worker ? `${worker.firstName} ${worker.lastName}` : undefined;
+        
+        saveIssues(issues);
+        return issues[issueIndex];
+    });
+};
+
+export const apiAddComment = (issueId: string, text: string, author: Omit<User, 'password'>): Promise<CivicIssue> => {
+    return simulateApi(() => {
+        const issues = getIssues();
+        const issueIndex = issues.findIndex(i => i.id === issueId);
+        if (issueIndex === -1) throw new Error('Issue not found.');
+
+        const newComment: Comment = {
+            id: generateId(),
+            authorId: author.email,
+            authorName: `${author.firstName} ${author.lastName}`,
+            text,
+            createdAt: new Date(),
+        };
+
+        issues[issueIndex].comments.push(newComment);
+        saveIssues(issues);
+        return issues[issueIndex];
+    });
+};
+
+
+// --- USER MANAGEMENT (by Admin) ---
+export const apiAdminGetAllUsers = (): Promise<Omit<User, 'password'>[]> => {
+    return simulateApi(() => getUsers().map(omitPassword));
+};
+
+export const apiAdminUpdateUserRole = (email: string, newRole: UserRole): Promise<Omit<User, 'password'>> => {
+    return simulateApi(() => {
+        const users = getUsers();
+        const userIndex = users.findIndex(u => u.email === email);
+        if (userIndex === -1) throw new Error("User not found.");
+        users[userIndex].role = newRole;
+        saveUsers(users);
+        return omitPassword(users[userIndex]);
+    });
+};
+
+export const apiAdminSetUserLocation = (email: string, location: { lat: number, lng: number }): Promise<Omit<User, 'password'>> => {
+    return simulateApi(() => {
+        const users = getUsers();
+        const userIndex = users.findIndex(u => u.email === email);
+        if (userIndex === -1) throw new Error("User not found.");
+        users[userIndex].location = location;
+        saveUsers(users);
+        return omitPassword(users[userIndex]);
+    });
+};
+
+export const apiAdminCreateUser = (userData: User): Promise<Omit<User, 'password'>> => {
+    return simulateApi(() => {
+        const users = getUsers();
+        if (users.some(u => u.email === userData.email)) {
+            throw new Error("User with this email already exists.");
+        }
+        if (!userData.password || userData.password.length < 8) {
+             throw new Error("Password must be at least 8 characters long.");
+        }
+        users.push(userData);
+        saveUsers(users);
+        return omitPassword(userData);
+    });
+};
+
+// --- USER SELF-SERVICE ---
+export const apiUpdateMyProfile = (email: string, data: { firstName: string, lastName: string, mobileNumber: string }): Promise<{ user: Omit<User, 'password'>, token: string }> => {
+    return simulateApi(() => {
+        const users = getUsers();
+        const userIndex = users.findIndex(u => u.email === email);
+        if (userIndex === -1) throw new Error("User not found.");
+        
+        users[userIndex] = { ...users[userIndex], ...data };
+        saveUsers(users);
+
+        const updatedUser = omitPassword(users[userIndex]);
+        const token = createToken(updatedUser);
+        return { user: updatedUser, token };
+    });
+};
+
+export const apiChangeMyPassword = (email: string, oldPass: string, newPass: string): Promise<void> => {
+    return simulateApi(() => {
+        const users = getUsers();
+        const userIndex = users.findIndex(u => u.email === email);
+        if (userIndex === -1) throw new Error("User not found.");
+        if (users[userIndex].password !== oldPass) throw new Error("Incorrect current password.");
+        if (newPass.length < 8) throw new Error("New password must be at least 8 characters long.");
+
+        users[userIndex].password = newPass;
+        saveUsers(users);
+    });
+};
+
+export const apiUpdateMyLocation = (email: string, location: { lat: number, lng: number }): Promise<Omit<User, 'password'>> => {
+    return simulateApi(() => {
+        const users = getUsers();
+        const userIndex = users.findIndex(u => u.email === email);
+        if (userIndex === -1) throw new Error("User not found.");
+        
+        users[userIndex].location = location;
+        saveUsers(users);
+        return omitPassword(users[userIndex]);
+    });
+};

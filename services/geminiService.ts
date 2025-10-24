@@ -17,26 +17,40 @@ const ai = new GoogleGenAI({ apiKey: API_KEY || "" });
 const model = 'gemini-2.5-flash';
 const issueCategories = ['Pothole', 'Garbage', 'Streetlight', 'Graffiti', 'Flooding', 'Damaged Signage', 'Other'];
 
-export const categorizeIssue = async (description: string, imageBase64: string, mimeType: string): Promise<CategorizationResponse> => {
+export const categorizeIssue = async (description: string, imageBase64?: string | null, mimeType?: string | null): Promise<CategorizationResponse> => {
   try {
-    const imagePart = {
-      inlineData: {
-        mimeType: mimeType,
-        data: imageBase64,
-      },
-    };
+    const parts: ({ inlineData: { mimeType: string; data: string; }; } | { text: string; })[] = [];
+    let promptText: string;
 
-    const textPart = {
-      text: `Analyze the user's report about a civic issue. Based on the description and image, categorize it into one of the following: ${issueCategories.join(', ')}. Also, create a concise title for the report.
+    if (imageBase64 && mimeType) {
+      const imagePart = {
+        inlineData: {
+          mimeType: mimeType,
+          data: imageBase64,
+        },
+      };
+      parts.push(imagePart);
+      promptText = `Analyze the user's report about a civic issue. Based on the description and image, categorize it into one of the following: ${issueCategories.join(', ')}. Also, create a concise title for the report.
 
       User Description: "${description}"
 
-      Return a JSON object with 'category' and 'title' keys.`,
+      Return a JSON object with 'category' and 'title' keys.`;
+    } else {
+      promptText = `Analyze the user's report about a civic issue. Based ONLY on the following description, categorize it into one of the following: ${issueCategories.join(', ')}. Also, create a concise title for the report.
+
+      User Description: "${description}"
+
+      Return a JSON object with 'category' and 'title' keys.`;
+    }
+    
+    const textPart = {
+      text: promptText,
     };
+    parts.push(textPart);
 
     const response = await ai.models.generateContent({
         model: model,
-        contents: { parts: [imagePart, textPart] },
+        contents: { parts: parts },
         config: {
             responseMimeType: "application/json",
             responseSchema: {

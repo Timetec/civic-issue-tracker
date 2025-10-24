@@ -1,8 +1,23 @@
-// Fix: Added full content for types.ts
 export enum IssueStatus {
   Pending = 'Pending',
   InProgress = 'In Progress',
+  ForReview = 'For Review',
   Resolved = 'Resolved',
+}
+
+export enum UserRole {
+  Citizen = 'Citizen',
+  Worker = 'Worker',
+  Admin = 'Admin',
+  Service = 'Service',
+}
+
+export interface Comment {
+  id: string;
+  authorId: string;
+  authorName: string;
+  text: string;
+  createdAt: Date;
 }
 
 export interface CivicIssue {
@@ -19,6 +34,10 @@ export interface CivicIssue {
   createdAt: Date;
   reporterId: string;
   reporterName: string; // denormalized for easy display
+  assignedTo?: string; // worker's email
+  assignedToName?: string; // worker's full name
+  comments: Comment[];
+  rating?: number; // Rating from 1 to 5
 }
 
 export interface User {
@@ -27,6 +46,11 @@ export interface User {
   firstName: string;
   lastName: string;
   mobileNumber: string;
+  role: UserRole;
+  location?: {
+    lat: number;
+    lng: number;
+  };
 }
 
 export interface CategorizationResponse {

@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { CameraIcon, LocationMarkerIcon, Spinner } from './Icons';
 
 interface IssueFormProps {
-  onSubmit: (description: string, photo: File, location: { lat: number; lng: number }) => void;
+  onSubmit: (description: string, photo: File | null, location: { lat: number; lng: number }) => void;
   isSubmitting: boolean;
 }
 
@@ -47,10 +47,10 @@ export const IssueForm: React.FC<IssueFormProps> = ({ onSubmit, isSubmitting }) 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (description && photo && location) {
+    if (description && location) {
       onSubmit(description, photo, location);
     } else {
-      alert('Please fill out all fields, upload a photo, and provide your location.');
+      alert('Please fill out the description and provide your location.');
     }
   };
 
@@ -65,7 +65,7 @@ export const IssueForm: React.FC<IssueFormProps> = ({ onSubmit, isSubmitting }) 
           <textarea
             id="description"
             rows={4}
-            className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
+            className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 px-3 py-2"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Describe the issue in detail..."
@@ -74,7 +74,7 @@ export const IssueForm: React.FC<IssueFormProps> = ({ onSubmit, isSubmitting }) 
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Photo</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Photo (Optional)</label>
           <div
             className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-md cursor-pointer"
             onClick={() => fileInputRef.current?.click()}
@@ -100,7 +100,6 @@ export const IssueForm: React.FC<IssueFormProps> = ({ onSubmit, isSubmitting }) 
               className="sr-only"
               accept="image/*"
               onChange={handlePhotoChange}
-              required
             />
           </div>
         </div>
@@ -124,7 +123,7 @@ export const IssueForm: React.FC<IssueFormProps> = ({ onSubmit, isSubmitting }) 
 
         <button
           type="submit"
-          disabled={isSubmitting || !description || !photo || !location}
+          disabled={isSubmitting || !description || !location}
           className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-indigo-400 dark:disabled:bg-indigo-800"
         >
           {isSubmitting && <Spinner className="h-5 w-5 mr-3" />}

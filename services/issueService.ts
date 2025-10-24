@@ -1,12 +1,39 @@
-import type { CivicIssue } from '../types';
+import type { CivicIssue, Comment } from '../types';
 import { IssueStatus } from '../types';
 import * as api from './mockApi';
 import * as geminiService from './geminiService';
 import * as authService from './authService';
 
 export const getIssues = (): Promise<CivicIssue[]> => {
-  // Calls the mock API now
   return api.apiGetIssues();
+};
+
+export const getSampleIssues = (): Promise<CivicIssue[]> => {
+    return api.apiGetSampleIssues();
+};
+
+export const getMyReportedIssues = (): Promise<CivicIssue[]> => {
+  const currentUser = authService.getCurrentUser();
+  if (!currentUser) {
+    return Promise.reject(new Error("User not authenticated."));
+  }
+  return api.apiGetMyReportedIssues(currentUser.email);
+};
+
+export const getMyAssignedIssues = (): Promise<CivicIssue[]> => {
+  const currentUser = authService.getCurrentUser();
+  if (!currentUser) {
+    return Promise.reject(new Error("User not authenticated."));
+  }
+  return api.apiGetMyAssignedIssues(currentUser.email);
+};
+
+export const getIssueById = (id: string): Promise<CivicIssue> => {
+  return api.apiGetIssueById(id);
+};
+
+export const getIssuesByUser = (searchTerm: string): Promise<CivicIssue[]> => {
+  return api.apiGetIssuesByUser(searchTerm);
 };
 
 const fileToBase64 = (file: File): Promise<{ base64: string; mimeType: string }> => {
@@ -29,26 +56,28 @@ const fileToBase64 = (file: File): Promise<{ base64: string; mimeType: string }>
 
 export const addIssue = async (
   description: string,
-  photo: File,
+  photo: File | null,
   location: { lat: number; lng: number }
 ): Promise<CivicIssue> => {
-  // This function now uses client-side categorization and the mock API.
   try {
     const currentUser = authService.getCurrentUser();
     if (!currentUser) {
       throw new Error("User not authenticated to add an issue.");
     }
     
-    // 1. Convert photo for Gemini API
-    const { base64: imageBase64, mimeType } = await fileToBase64(photo);
+    let imageBase64: string | null = null;
+    let mimeType: string | null = null;
+    let photoUrl: string = 'https://placehold.co/600x400/e2e8f0/cbd5e0/png?text=No+Image';
+
+    if (photo) {
+      const convertedFile = await fileToBase64(photo);
+      imageBase64 = convertedFile.base64;
+      mimeType = convertedFile.mimeType;
+      photoUrl = await api.apiUploadPhoto(photo);
+    }
     
-    // 2. Get AI-powered category and title
     const { category, title } = await geminiService.categorizeIssue(description, imageBase64, mimeType);
     
-    // 3. "Upload" photo using mock service (returns a data URL)
-    const photoUrl = await api.apiUploadPhoto(photo);
-
-    // 4. Prepare issue data for mock API
     const newIssueData = {
         title,
         description,
@@ -59,7 +88,6 @@ export const addIssue = async (
         reporterName: `${currentUser.firstName} ${currentUser.lastName}`
     };
 
-    // 5. Add issue to mock database
     const newIssue = await api.apiAddIssue(newIssueData);
     return newIssue;
   } catch (error) {
@@ -69,6 +97,25 @@ export const addIssue = async (
 };
 
 export const updateIssueStatus = (id: string, newStatus: IssueStatus): Promise<CivicIssue> => {
-  // Calls the mock API now
   return api.apiUpdateIssueStatus(id, newStatus);
+};
+
+export const citizenResolveIssue = (issueId: string, rating: number): Promise<CivicIssue> => {
+    const currentUser = authService.getCurrentUser();
+    if (!currentUser) {
+        return Promise.reject(new Error("User not authenticated."));
+    }
+    return api.apiCitizenResolveIssue(issueId, rating, currentUser.email);
+};
+
+export const assignIssue = (issueId: string, workerEmail: string): Promise<CivicIssue> => {
+  return api.apiAdminAssignIssue(issueId, workerEmail);
+};
+
+export const addComment = (issueId: string, text: string): Promise<CivicIssue> => {
+  const currentUser = authService.getCurrentUser();
+  if (!currentUser) {
+    return Promise.reject(new Error("User not authenticated."));
+  }
+  return api.apiAddComment(issueId, text, currentUser);
 };
