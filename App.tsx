@@ -193,7 +193,7 @@ const App: React.FC = () => {
         if(currentUser?.role === UserRole.Admin) {
             await fetchData();
         }
-        // Also update the currentUser object in state if they are a worker
+        // Update the current user's state if they are the one who updated their profile
         if (currentUser?.email === updatedUser.email) {
             setCurrentUser(updatedUser);
         }

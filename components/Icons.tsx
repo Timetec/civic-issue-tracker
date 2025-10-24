@@ -19,6 +19,14 @@ export const LocationMarkerIcon: React.FC<IconProps> = ({ className }) => (
   </svg>
 );
 
+export const MapPinIcon: React.FC<IconProps> = ({ className }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657l-5.657 5.657-5.657-5.657a8 8 0 1111.314 0z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 12a3 3 0 100-6 3 3 0 000 6z" />
+    </svg>
+);
+
+
 export const Spinner: React.FC<IconProps> = ({ className }) => (
   <svg className={`animate-spin ${className}`} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>

@@ -3,6 +3,7 @@ import type { User } from '../types';
 import { UserRole } from '../types';
 import { Modal } from './Modal';
 import { Spinner } from './Icons';
+import { MapModal } from './MapModal';
 
 interface ProfileModalProps {
   isOpen: boolean;
@@ -22,8 +23,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, use
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
 
-  const [lat, setLat] = useState('');
-  const [lng, setLng] = useState('');
+  const [isMapModalOpen, setIsMapModalOpen] = useState(false);
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -34,8 +34,6 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, use
       setFirstName(user.firstName);
       setLastName(user.lastName);
       setMobileNumber(user.mobileNumber);
-      setLat(user.location?.lat?.toString() || '');
-      setLng(user.location?.lng?.toString() || '');
     }
   }, [user]);
 
@@ -50,8 +48,6 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, use
         setFirstName(user.firstName);
         setLastName(user.lastName);
         setMobileNumber(user.mobileNumber);
-        setLat(user.location?.lat.toString() || '');
-        setLng(user.location?.lng.toString() || '');
     }
     onClose();
   };
@@ -94,17 +90,11 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, use
     }
   };
   
-  const handleLocationSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const latNum = parseFloat(lat);
-    const lngNum = parseFloat(lng);
-    if (isNaN(latNum) || isNaN(lngNum)) {
-        setError('Latitude and Longitude must be valid numbers.');
-        return;
-    }
+  const handleLocationUpdate = async (location: { lat: number, lng: number }) => {
+    setIsMapModalOpen(false);
     setIsLoading(true);
     setError('');
-    const success = await onUpdateLocation({ lat: latNum, lng: lngNum });
+    const success = await onUpdateLocation(location);
     setIsLoading(false);
     if(success) {
         showSuccessMessage('Location updated successfully!');
@@ -113,9 +103,11 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, use
     }
   };
 
+
   if (!user) return null;
 
   return (
+    <>
     <Modal isOpen={isOpen} onClose={handleClose}>
       <div className="p-6">
         <div className="flex justify-between items-start">
@@ -153,24 +145,18 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, use
           )}
         </form>
 
-        {user.role === UserRole.Worker && (
-             <form onSubmit={handleLocationSubmit} className="space-y-4 pt-4 mt-4 border-t border-gray-200 dark:border-gray-700">
-                <h3 className="text-lg font-semibold text-gray-800 dark:text-white">My Location</h3>
-                <div className="flex space-x-4">
-                     <div>
-                        <label className="block text-sm font-medium text-gray-500 dark:text-gray-400">Latitude</label>
-                        <input type="text" value={lat} onChange={e => setLat(e.target.value)} className="mt-1 w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white" />
-                    </div>
-                     <div>
-                        <label className="block text-sm font-medium text-gray-500 dark:text-gray-400">Longitude</label>
-                        <input type="text" value={lng} onChange={e => setLng(e.target.value)} className="mt-1 w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white" />
-                    </div>
-                </div>
-                 <div className="flex justify-end">
-                    <button type="submit" disabled={isLoading} className="px-4 py-2 text-sm rounded-md bg-indigo-600 text-white flex items-center">{isLoading && <Spinner className="h-4 w-4 mr-2" />} Update Location</button>
-                 </div>
-             </form>
-        )}
+        <div className="space-y-4 pt-4 mt-4 border-t border-gray-200 dark:border-gray-700">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-white">My Location</h3>
+            <p className="text-xs text-gray-500 dark:text-gray-400 -mt-3">Setting your location is optional. For Workers, this helps auto-assign issues based on proximity.</p>
+            {user.location && (
+              <p className="text-sm text-gray-600 dark:text-gray-300">
+                Current Location: <span className="font-mono">{user.location.lat.toFixed(4)}, {user.location.lng.toFixed(4)}</span>
+              </p>
+            )}
+             <div className="flex justify-end">
+                <button onClick={() => setIsMapModalOpen(true)} disabled={isLoading} className="px-4 py-2 text-sm rounded-md bg-indigo-600 text-white flex items-center">{isLoading && <Spinner className="h-4 w-4 mr-2" />} Set Location on Map</button>
+             </div>
+        </div>
 
         <div className="pt-4 mt-4 border-t border-gray-200 dark:border-gray-700">
             <h3 className="text-lg font-semibold text-gray-800 dark:text-white">Change Password</h3>
@@ -182,8 +168,16 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, use
                 </div>
             </form>
         </div>
-
       </div>
     </Modal>
+    {user && (
+      <MapModal
+        isOpen={isMapModalOpen}
+        onClose={() => setIsMapModalOpen(false)}
+        initialCenter={user.location || { lat: 34.0522, lng: -118.2437 }} // Default to LA
+        onConfirm={handleLocationUpdate}
+      />
+    )}
+    </>
   );
 };

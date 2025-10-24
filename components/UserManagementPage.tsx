@@ -1,10 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import type { User } from '../types';
 import { UserRole } from '../types';
 import * as userService from '../services/userService';
-import { Spinner, PlusIcon } from './Icons';
+import { Spinner, PlusIcon, LocationMarkerIcon } from './Icons';
 import { CreateUserModal } from './CreateUserModal';
+import { MapModal } from './MapModal';
 
 interface UserManagementPageProps {
     currentUser: Omit<User, 'password'>;
@@ -15,8 +15,10 @@ export const UserManagementPage: React.FC<UserManagementPageProps> = ({ currentU
     const [users, setUsers] = useState<Omit<User, 'password'>[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingLocation, setEditingLocation] = useState<Record<string, { lat: string; lng: string }>>({});
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [isMapModalOpen, setIsMapModalOpen] = useState(false);
+    const [selectedUserForMap, setSelectedUserForMap] = useState<Omit<User, 'password'> | null>(null);
+
 
     const fetchUsers = async () => {
         try {
@@ -47,47 +49,23 @@ export const UserManagementPage: React.FC<UserManagementPageProps> = ({ currentU
             console.error(err);
         }
     };
-    
-    const handleLocationChange = (email: string, coord: 'lat' | 'lng', value: string) => {
-        const currentUser = users.find(u => u.email === email);
-        const currentLat = currentUser?.location?.lat.toString() ?? '';
-        const currentLng = currentUser?.location?.lng.toString() ?? '';
 
-        setEditingLocation(prev => ({
-            ...prev,
-            [email]: {
-                lat: coord === 'lat' ? value : (prev[email]?.lat ?? currentLat),
-                lng: coord === 'lng' ? value : (prev[email]?.lng ?? currentLng),
-            }
-        }));
+    const openMapForUser = (user: Omit<User, 'password'>) => {
+        setSelectedUserForMap(user);
+        setIsMapModalOpen(true);
     };
 
-    const handleSetLocation = async (email: string) => {
-        const location = editingLocation[email];
-        if (!location || !location.lat || !location.lng) {
-            alert('Please provide both latitude and longitude.');
-            return;
-        }
-        
-        const lat = parseFloat(location.lat);
-        const lng = parseFloat(location.lng);
-
-        if (isNaN(lat) || isNaN(lng)) {
-            alert('Invalid latitude or longitude. Please enter numbers only.');
-            return;
-        }
+    const handleSetLocation = async (location: { lat: number, lng: number }) => {
+        if (!selectedUserForMap) return;
 
         try {
-            const updatedUser = await userService.adminSetUserLocation(email, { lat, lng });
+            const updatedUser = await userService.adminSetUserLocation(selectedUserForMap.email, location);
             setUsers(currentUsers =>
-                currentUsers.map(u => (u.email === email ? updatedUser : u))
+                currentUsers.map(u => (u.email === selectedUserForMap.email ? updatedUser : u))
             );
-            setEditingLocation(prev => {
-                const next = {...prev};
-                delete next[email];
-                return next;
-            });
             onUsersUpdate();
+            setIsMapModalOpen(false);
+            setSelectedUserForMap(null);
         } catch (err) {
             alert('Failed to set location.');
             console.error(err);
@@ -96,7 +74,7 @@ export const UserManagementPage: React.FC<UserManagementPageProps> = ({ currentU
 
 
     const handleUserCreated = () => {
-        setIsModalOpen(false);
+        setIsCreateModalOpen(false);
         fetchUsers(); // Refetch users to include the new one
         onUsersUpdate();
     };
@@ -118,7 +96,7 @@ export const UserManagementPage: React.FC<UserManagementPageProps> = ({ currentU
             <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold text-gray-800 dark:text-white">User Management</h2>
                 <button
-                    onClick={() => setIsModalOpen(true)}
+                    onClick={() => setIsCreateModalOpen(true)}
                     className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 flex items-center"
                 >
                     <PlusIcon className="h-5 w-5 mr-2" />
@@ -133,7 +111,7 @@ export const UserManagementPage: React.FC<UserManagementPageProps> = ({ currentU
                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Name</th>
                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Contact</th>
                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Role</th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Location (Lat, Lng)</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Location</th>
                         </tr>
                     </thead>
                     <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
@@ -160,13 +138,15 @@ export const UserManagementPage: React.FC<UserManagementPageProps> = ({ currentU
                                 </td>
                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {user.role === UserRole.Worker ? (
-                                        <div className="flex flex-col space-y-2 w-48">
-                                            <div className="flex items-center space-x-1">
-                                                <input type="text" placeholder="Latitude" defaultValue={user.location?.lat ?? ''} onChange={(e) => handleLocationChange(user.email, 'lat', e.target.value)} className="appearance-none relative block w-full px-2 py-1 border border-gray-300 dark:border-gray-600 placeholder-gray-500 text-gray-900 dark:text-gray-200 bg-white dark:bg-gray-700 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm" />
-                                                <input type="text" placeholder="Longitude" defaultValue={user.location?.lng ?? ''} onChange={(e) => handleLocationChange(user.email, 'lng', e.target.value)} className="appearance-none relative block w-full px-2 py-1 border border-gray-300 dark:border-gray-600 placeholder-gray-500 text-gray-900 dark:text-gray-200 bg-white dark:bg-gray-700 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm" />
-                                            </div>
-                                            <button onClick={() => handleSetLocation(user.email)} className="w-full text-xs px-2 py-1 rounded bg-indigo-600 text-white hover:bg-indigo-700 disabled:bg-indigo-400" disabled={!editingLocation[user.email]}>
-                                                Set Location
+                                        <div className="flex flex-col items-start">
+                                            {user.location ? (
+                                                <span className="text-xs font-mono">{user.location.lat.toFixed(4)}, {user.location.lng.toFixed(4)}</span>
+                                            ) : (
+                                                <span className="text-xs text-gray-400 italic">Not set</span>
+                                            )}
+                                            <button onClick={() => openMapForUser(user)} className="mt-1 text-xs px-2 py-1 rounded bg-indigo-600 text-white hover:bg-indigo-700 flex items-center">
+                                                <LocationMarkerIcon className="h-3 w-3 mr-1" />
+                                                {user.location ? 'Edit' : 'Set'} Location
                                             </button>
                                         </div>
                                     ) : (
@@ -180,10 +160,19 @@ export const UserManagementPage: React.FC<UserManagementPageProps> = ({ currentU
             </div>
             
             <CreateUserModal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
+                isOpen={isCreateModalOpen}
+                onClose={() => setIsCreateModalOpen(false)}
                 onUserCreated={handleUserCreated}
             />
+
+            {selectedUserForMap && (
+                <MapModal 
+                    isOpen={isMapModalOpen}
+                    onClose={() => setIsMapModalOpen(false)}
+                    initialCenter={selectedUserForMap.location || { lat: 34.0522, lng: -118.2437 }} // Default to LA
+                    onConfirm={handleSetLocation}
+                />
+            )}
         </div>
     );
 };
