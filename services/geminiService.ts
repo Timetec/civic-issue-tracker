@@ -1,0 +1,77 @@
+
+
+import { GoogleGenAI, Type } from "@google/genai";
+import type { CategorizationResponse } from '../types';
+
+const API_KEY = process.env.API_KEY;
+
+if (!API_KEY) {
+  // This is a placeholder for environments where the API_KEY is not set.
+  // In the target environment, this should be provided.
+  console.warn("API_KEY environment variable not set. Gemini API calls will fail.");
+}
+
+// Fix: Added a null check for API_KEY to avoid passing undefined.
+const ai = new GoogleGenAI({ apiKey: API_KEY || "" });
+
+const model = 'gemini-2.5-flash';
+const issueCategories = ['Pothole', 'Garbage', 'Streetlight', 'Graffiti', 'Flooding', 'Damaged Signage', 'Other'];
+
+export const categorizeIssue = async (description: string, imageBase64: string, mimeType: string): Promise<CategorizationResponse> => {
+  try {
+    const imagePart = {
+      inlineData: {
+        mimeType: mimeType,
+        data: imageBase64,
+      },
+    };
+
+    const textPart = {
+      text: `Analyze the user's report about a civic issue. Based on the description and image, categorize it into one of the following: ${issueCategories.join(', ')}. Also, create a concise title for the report.
+
+      User Description: "${description}"
+
+      Return a JSON object with 'category' and 'title' keys.`,
+    };
+
+    const response = await ai.models.generateContent({
+        model: model,
+        contents: { parts: [imagePart, textPart] },
+        config: {
+            responseMimeType: "application/json",
+            responseSchema: {
+                type: Type.OBJECT,
+                properties: {
+                    category: { 
+                        type: Type.STRING,
+                        description: `The category of the issue. Must be one of: ${issueCategories.join(', ')}.`
+                    },
+                    title: { 
+                        type: Type.STRING,
+                        description: 'A concise title for the issue report.'
+                    },
+                },
+                required: ["category", "title"],
+            },
+        },
+    });
+
+    const jsonString = response.text.trim();
+    const result = JSON.parse(jsonString);
+    
+    // Validate the category
+    if (!issueCategories.includes(result.category)) {
+      result.category = 'Other';
+    }
+
+    return result as CategorizationResponse;
+
+  } catch (error) {
+    console.error("Error categorizing issue with Gemini:", error);
+    // Fallback in case of API error
+    return {
+      category: 'Other',
+      title: 'Issue Report',
+    };
+  }
+};
