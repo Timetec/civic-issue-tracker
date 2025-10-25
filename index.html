@@ -15,20 +15,6 @@
 </head>
   <body class="bg-gray-100 dark:bg-gray-900">
     <div id="root"></div>
-    <script>
-      // This more robust startup script waits for the next event loop tick to ensure
-      // it runs AFTER the preview environment has injected its conflicting importmap.
-      // This resolves the race condition and allows Vite to take control.
-      function removeConflictingImportMap() {
-        const importMapScript = document.querySelector('script[type="importmap"]');
-        if (importMapScript) {
-          importMapScript.remove();
-          console.log('Successfully removed conflicting importmap.');
-        } else {
-          console.log('Startup script ran, but no importmap was found to remove.');
-        }
-      }
-      setTimeout(removeConflictingImportMap, 0);
     </script>
     <script type="module" src="/src/index.tsx"></script>
   </body>
