@@ -57,7 +57,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onRegister, onBac
       <button onClick={onBackToLanding} className="absolute top-4 left-4 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:underline">&larr; Back to Home</button>
       <div className="max-w-md w-full space-y-8 p-10 bg-white dark:bg-gray-800 shadow-lg rounded-xl">
         <div>
-          <img className="mx-auto h-12 w-auto" src="https://tailwindui.com/img/logos/workflow-mark-indigo-600.svg" alt="Workflow" />
+          <img className="mx-auto h-12 w-auto" src="/assets/logo.svg" alt="Workflow" />
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
             {isLoginView ? 'Sign in to your account' : 'Create a new account'}
           </h2>

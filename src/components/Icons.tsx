@@ -117,3 +117,17 @@ export const ListBulletIcon: React.FC<IconProps> = ({ className }) => (
         <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
     </svg>
 );
+
+export const LightBulbIcon: React.FC<IconProps> = ({ className }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-11.25a6.01 6.01 0 00-3 0m1.5 11.25a6.01 6.01 0 01-1.5-11.25m1.5 11.25v-8.25" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 18.75c0 .414.336.75.75.75h3c.414 0 .75-.336.75-.75V18a2.25 2.25 0 00-4.5 0v.75z" />
+    </svg>
+);
+
+
+export const ChatBubbleLeftRightIcon: React.FC<IconProps> = ({ className }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193l-3.72 3.72a1.5 1.5 0 01-2.12 0l-3.72-3.72a2.123 2.123 0 01-1.98-2.193V10.608c0-.97.616-1.813 1.5-2.097m0 0A7.496 7.496 0 0012 8.25a7.496 7.496 0 00-4.25-1.748m4.25 1.748c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193l-3.72 3.72a1.5 1.5 0 01-2.12 0l-3.72-3.72a2.123 2.123 0 01-1.98-2.193V10.608c0-.97.616-1.813 1.5-2.097m0 0A7.496 7.496 0 0012 8.25a7.496 7.496 0 00-4.25-1.748m4.25 1.748A7.496 7.496 0 0012 8.25a7.496 7.496 0 004.25-1.748" />
+    </svg>
+);
