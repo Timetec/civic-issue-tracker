@@ -52,7 +52,7 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({ issue, isOpe
     const isAssignedWorker = currentUser.email === issue.assignedTo;
     
     const canViewComments = isAdmin || isReporter || isAssignedWorker || currentUser.role === UserRole.Service;
-    const canAddComment = isAdmin || isReporter || isAssignedWorker;
+    const canAddComment = isAdmin || isReporter || isAssignedWorker || currentUser.role === UserRole.Service;
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} title="Issue Details" size="xl">
