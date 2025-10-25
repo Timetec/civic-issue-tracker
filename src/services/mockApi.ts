@@ -4,15 +4,42 @@ import { IssueStatus, UserRole } from '../types';
 // --- Initialization ---
 const init = () => {
   if (!localStorage.getItem('users')) {
-    const adminUser: User = {
-      email: 'admin@test.com',
-      password: 'password',
-      firstName: 'Admin',
-      lastName: 'User',
-      mobileNumber: '1234567890',
-      role: UserRole.Admin,
-    };
-    localStorage.setItem('users', JSON.stringify([adminUser]));
+    const defaultUsers: User[] = [
+      {
+        email: 'admin@test.com',
+        password: 'password',
+        firstName: 'Admin',
+        lastName: 'User',
+        mobileNumber: '1234567890',
+        role: UserRole.Admin,
+      },
+      {
+        email: 'worker@test.com',
+        password: 'password',
+        firstName: 'Bob',
+        lastName: 'Builder',
+        mobileNumber: '2345678901',
+        role: UserRole.Worker,
+        location: { lat: 34.0522, lng: -118.2437 }, // Downtown LA
+      },
+      {
+        email: 'service@test.com',
+        password: 'password',
+        firstName: 'Service',
+        lastName: 'Desk',
+        mobileNumber: '3456789012',
+        role: UserRole.Service,
+      },
+      {
+        email: 'citizen@test.com',
+        password: 'password',
+        firstName: 'Jane',
+        lastName: 'Doe',
+        mobileNumber: '4567890123',
+        role: UserRole.Citizen,
+      },
+    ];
+    localStorage.setItem('users', JSON.stringify(defaultUsers));
   }
   if (!localStorage.getItem('issues')) {
     localStorage.setItem('issues', JSON.stringify([]));

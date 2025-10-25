@@ -3,7 +3,7 @@ import type { CategorizationResponse } from '../types';
 
 // Per project guidelines, the API key is sourced from process.env.API_KEY
 // and assumed to be available in the execution environment.
-const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 const model = 'gemini-2.5-flash';
 const issueCategories = ['Pothole', 'Garbage', 'Streetlight', 'Graffiti', 'Flooding', 'Damaged Signage', 'Other'];
