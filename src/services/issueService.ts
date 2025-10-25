@@ -10,6 +10,35 @@ import { USE_REAL_API } from '../config';
 // Helper to simulate network delay for mock API
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
+/**
+ * Transforms a raw issue object from the API into the CivicIssue type,
+ * converting date strings to Date objects.
+ * @param issue The raw issue object with string dates.
+ * @returns A CivicIssue object with Date objects.
+ */
+const transformIssue = (issue: any): CivicIssue => {
+    if (!issue) return issue;
+    return {
+        ...issue,
+        createdAt: new Date(issue.createdAt),
+        comments: issue.comments.map((comment: any) => ({
+            ...comment,
+            createdAt: new Date(comment.createdAt),
+        })),
+    };
+};
+
+/**
+ * Transforms an array of raw issue objects from the API.
+ * @param issues The array of raw issue objects.
+ * @returns An array of CivicIssue objects.
+ */
+const transformIssues = (issues: any[]): CivicIssue[] => {
+    if (!Array.isArray(issues)) return [];
+    return issues.map(transformIssue);
+};
+
+
 const fileToBase64 = (file: File): Promise<{imageBase64: string, mimeType: string}> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -68,7 +97,8 @@ export const addIssue = async (description: string, photos: File[], location: { 
     photos.forEach(photo => {
         formData.append('photos', photo);
     });
-    return apiClient.postForm<CivicIssue>('/api/issues', formData);
+    const issue = await apiClient.postForm<any>('/api/issues', formData);
+    return transformIssue(issue);
   } else {
     // Mock API Flow
     const imagePayloads = await Promise.all(photos.map(fileToBase64));
@@ -97,13 +127,19 @@ export const addIssue = async (description: string, photos: File[], location: { 
 };
 
 export const getIssues = async (): Promise<CivicIssue[]> => {
-    if (USE_REAL_API) return apiClient.get<CivicIssue[]>('/api/issues');
+    if (USE_REAL_API) {
+        const issues = await apiClient.get<any[]>('/api/issues');
+        return transformIssues(issues);
+    }
     await delay(500);
     return mockApi.getAllIssues();
 };
 
 export const getMyReportedIssues = async (): Promise<CivicIssue[]> => {
-    if (USE_REAL_API) return apiClient.get<CivicIssue[]>('/api/issues/reported');
+    if (USE_REAL_API) {
+        const issues = await apiClient.get<any[]>('/api/issues/reported');
+        return transformIssues(issues);
+    }
     const currentUser = authService.getCurrentUser();
     if (!currentUser) throw new Error("Not authenticated");
     await delay(500);
@@ -111,7 +147,10 @@ export const getMyReportedIssues = async (): Promise<CivicIssue[]> => {
 };
 
 export const getMyAssignedIssues = async (): Promise<CivicIssue[]> => {
-    if (USE_REAL_API) return apiClient.get<CivicIssue[]>('/api/issues/assigned');
+    if (USE_REAL_API) {
+        const issues = await apiClient.get<any[]>('/api/issues/assigned');
+        return transformIssues(issues);
+    }
     const currentUser = authService.getCurrentUser();
     if (!currentUser) throw new Error("Not authenticated");
     await delay(500);
@@ -119,7 +158,10 @@ export const getMyAssignedIssues = async (): Promise<CivicIssue[]> => {
 };
 
 export const getRecentPublicIssues = async (): Promise<CivicIssue[]> => {
-    if (USE_REAL_API) return apiClient.get<CivicIssue[]>(`/api/issues/public/recent`);
+    if (USE_REAL_API) {
+        const issues = await apiClient.get<any[]>(`/api/issues/public/recent`);
+        return transformIssues(issues);
+    }
     
     // Mock API Flow
     await delay(500);
@@ -131,7 +173,10 @@ export const getRecentPublicIssues = async (): Promise<CivicIssue[]> => {
 };
 
 export const getIssuesByUser = async (identifier: string): Promise<CivicIssue[]> => {
-    if (USE_REAL_API) return apiClient.get<CivicIssue[]>(`/api/issues/user/${identifier}`);
+    if (USE_REAL_API) {
+        const issues = await apiClient.get<any[]>(`/api/issues/user/${identifier}`);
+        return transformIssues(issues);
+    }
     const serviceUser = authService.getCurrentUser();
     if (!serviceUser || serviceUser.role !== 'Service') throw new Error("Unauthorized");
     await delay(700);
@@ -139,7 +184,10 @@ export const getIssuesByUser = async (identifier: string): Promise<CivicIssue[]>
 };
 
 export const getIssueById = async(id: string): Promise<CivicIssue> => {
-    if (USE_REAL_API) return apiClient.get<CivicIssue>(`/api/issues/${id}`);
+    if (USE_REAL_API) {
+        const issue = await apiClient.get<any>(`/api/issues/${id}`);
+        return transformIssue(issue);
+    }
     const currentUser = authService.getCurrentUser();
     if (!currentUser) throw new Error("Not authenticated");
     await delay(400);
@@ -156,7 +204,10 @@ export const getIssueById = async(id: string): Promise<CivicIssue> => {
 }
 
 export const updateIssueStatus = async (id: string, status: IssueStatus): Promise<CivicIssue> => {
-    if (USE_REAL_API) return apiClient.put<CivicIssue>(`/api/issues/${id}/status`, { status });
+    if (USE_REAL_API) {
+        const issue = await apiClient.put<any>(`/api/issues/${id}/status`, { status });
+        return transformIssue(issue);
+    }
     const currentUser = authService.getCurrentUser();
     if (!currentUser || (currentUser.role !== 'Admin' && currentUser.role !== 'Worker')) {
         throw new Error("Unauthorized to update status");
@@ -166,7 +217,10 @@ export const updateIssueStatus = async (id: string, status: IssueStatus): Promis
 };
 
 export const citizenResolveIssue = async (id: string, rating: number): Promise<CivicIssue> => {
-    if (USE_REAL_API) return apiClient.put<CivicIssue>(`/api/issues/${id}/resolve`, { rating });
+    if (USE_REAL_API) {
+        const issue = await apiClient.put<any>(`/api/issues/${id}/resolve`, { rating });
+        return transformIssue(issue);
+    }
     const currentUser = authService.getCurrentUser();
     if (!currentUser || currentUser.role !== 'Citizen') {
         throw new Error("Only the reporting citizen can resolve the issue.");
@@ -181,7 +235,10 @@ export const citizenResolveIssue = async (id: string, rating: number): Promise<C
 };
 
 export const assignIssue = async (issueId: string, workerEmail: string): Promise<CivicIssue> => {
-    if (USE_REAL_API) return apiClient.put<CivicIssue>(`/api/issues/${issueId}/assign`, { workerEmail });
+    if (USE_REAL_API) {
+        const issue = await apiClient.put<any>(`/api/issues/${issueId}/assign`, { workerEmail });
+        return transformIssue(issue);
+    }
     const currentUser = authService.getCurrentUser();
     if (!currentUser || currentUser.role !== 'Admin') {
         throw new Error("Only admins can assign issues.");
@@ -198,7 +255,10 @@ export const assignIssue = async (issueId: string, workerEmail: string): Promise
 };
 
 export const addComment = async (issueId: string, text: string): Promise<CivicIssue> => {
-    if (USE_REAL_API) return apiClient.post<CivicIssue>(`/api/issues/${issueId}/comments`, { text });
+    if (USE_REAL_API) {
+        const issue = await apiClient.post<any>(`/api/issues/${issueId}/comments`, { text });
+        return transformIssue(issue);
+    }
     const currentUser = authService.getCurrentUser();
     if (!currentUser) throw new Error("Not authenticated");
     const issue = mockApi.getIssueById(issueId);

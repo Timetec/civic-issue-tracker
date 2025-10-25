@@ -92,6 +92,10 @@ Follow these instructions to get a local copy up and running for development and
 
     *   **To get your keys:**
         *   **Google Gemini API Key**: Obtain an API key from [Google AI Studio](https://aistudio.google.com/app/apikey).
+            *   **⚠️ IMPORTANT SECURITY NOTE:** When you create your Gemini API key in the Google Cloud Console, you will see security restriction options.
+            *   **For Backend Use (Recommended):** If you are running the Gemini calls on your backend server (by setting `VITE_API_BASE_URL`), your Gemini API key **MUST NOT** have "Website restrictions" (HTTP referrer restrictions). Server-to-server requests do not have a browser "referer" and will be blocked, resulting in a `403 API_KEY_HTTP_REFERRER_BLOCKED` error. Instead, leave the key unrestricted or use IP address restrictions if applicable.
+            *   **For Frontend Mock Use:** If you are only using the mock API (client-side calls), you **SHOULD** add "Website restrictions" to your key, listing your development URL (e.g., `localhost:5173`) and deployment URL (e.g., `your-app-name.vercel.app`).
+
         *   **Google Maps Platform API Key**:
             1.  Go to the [Google Cloud Console](https://console.cloud.google.com/) and create a new project.
             2.  Enable the following three (3) APIs for your project:
@@ -99,7 +103,7 @@ Follow these instructions to get a local copy up and running for development and
                 *   **Geocoding API**
                 *   **Maps Static API**
             3.  Create a new API Key under "Credentials".
-            4.  **Important**: For security, restrict your API key to your development and production domains.
+            4.  **Important**: For security, restrict your Maps API key to your development and production domains using "Website restrictions".
 
 4.  **Run the Application**
     Start the local development server:

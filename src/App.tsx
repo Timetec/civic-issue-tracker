@@ -17,6 +17,19 @@ import { Spinner, UserCircleIcon, LogoutIcon, UserGroupIcon, PlusIcon, MapIcon, 
 type AppView = 'LANDING' | 'LOGIN' | 'DASHBOARD' | 'FORM' | 'MANAGE_USERS';
 type CurrentUser = Omit<User, 'password'> | null;
 
+const getApiErrorMessage = (e: unknown): string => {
+    if (e instanceof Error) {
+        console.error(e);
+        if (e.message.toLowerCase().includes('failed to fetch')) {
+            return 'Network Error: Could not connect to the server. This may be a CORS issue or a server-side error. Please check the browser console and server logs for more details.';
+        }
+        return `An error occurred: ${e.message}`;
+    }
+    console.error('An unknown error occurred', e);
+    return 'An unknown error occurred. Please try again.';
+};
+
+
 const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<CurrentUser>(null);
   const [currentView, setCurrentView] = useState<AppView>('LANDING');
@@ -156,8 +169,7 @@ const App: React.FC = () => {
       await fetchData(); // Refresh data
       setCurrentView('DASHBOARD');
     } catch (e) {
-      alert('Failed to submit issue. Please try again.');
-      console.error(e);
+      alert(getApiErrorMessage(e));
     } finally {
       setIsSubmitting(false);
       setIsGlobalLoading(false);
@@ -170,7 +182,7 @@ const App: React.FC = () => {
         await issueService.updateIssueStatus(id, newStatus);
         await fetchData();
     } catch (e) {
-        alert('Failed to update status.');
+        alert(getApiErrorMessage(e));
     } finally {
       setIsGlobalLoading(false);
     }
@@ -182,7 +194,7 @@ const App: React.FC = () => {
       await issueService.citizenResolveIssue(id, rating);
       await fetchData();
     } catch(e) {
-      alert((e as Error).message || 'Failed to resolve issue.');
+      alert(getApiErrorMessage(e));
     } finally {
       setIsGlobalLoading(false);
     }
@@ -194,7 +206,7 @@ const App: React.FC = () => {
         await issueService.assignIssue(issueId, workerEmail);
         await fetchData();
     } catch (e) {
-        alert('Failed to assign issue.');
+        alert(getApiErrorMessage(e));
     } finally {
       setIsGlobalLoading(false);
     }
@@ -206,7 +218,7 @@ const App: React.FC = () => {
         await issueService.addComment(issueId, text);
         await fetchData();
     } catch(e) {
-        alert('Failed to add comment.');
+        alert(getApiErrorMessage(e));
     } finally {
       setIsGlobalLoading(false);
     }

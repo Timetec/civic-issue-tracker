@@ -80,7 +80,15 @@ export const categorizeIssue = async (description: string, images?: {imageBase64
 
   } catch (error) {
     console.error("Error categorizing issue with Gemini:", error);
-    // Fallback in case of API error
+    
+    // Check for the specific referrer block error and provide a helpful message.
+    if (error instanceof Error && error.message.includes('API_KEY_HTTP_REFERRER_BLOCKED')) {
+        throw new Error(
+            'Gemini API call failed: Your API key is restricted by an HTTP referrer. To use the client-side mock API, you must go to your Google Cloud Console, find this API key, and add your development URL (e.g., localhost:5173) and your deployment URL (e.g., your-app.vercel.app) to the list of allowed "Website restrictions". For production, it is strongly recommended to move this call to your backend server to keep your API key secure.'
+        );
+    }
+
+    // Fallback in case of other API errors
     return {
       category: 'Other',
       title: 'Issue Report',
