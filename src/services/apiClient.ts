@@ -9,7 +9,20 @@ const handleResponse = async (response: Response) => {
     const errorData = await response.json().catch(() => ({ message: 'An unknown error occurred' }));
     throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
   }
-  return response.json();
+
+  // Check if the response has content. If not, return null.
+  // This gracefully handles 200 OK or 204 No Content responses with no body.
+  const responseText = await response.text();
+  if (!responseText) {
+    return null as any;
+  }
+  
+  try {
+    return JSON.parse(responseText);
+  } catch (error) {
+    console.error("Failed to parse JSON response:", responseText);
+    throw new Error("Invalid JSON response from server.");
+  }
 };
 
 export const get = async <T>(endpoint: string): Promise<T> => {
