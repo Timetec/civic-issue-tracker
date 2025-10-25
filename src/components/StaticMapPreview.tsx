@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { MapPinIcon } from './Icons';
-
-const MAPS_API_KEY = process.env.VITE_GOOGLE_MAPS_API_KEY;
+import { GOOGLE_MAPS_API_KEY } from '../config';
 
 interface StaticMapPreviewProps {
   location: { lat: number; lng: number };
@@ -16,7 +15,7 @@ export const StaticMapPreview: React.FC<StaticMapPreviewProps> = ({ location, cl
     setHasError(false);
   }, [location]);
 
-  if (!MAPS_API_KEY) {
+  if (!GOOGLE_MAPS_API_KEY || GOOGLE_MAPS_API_KEY === "PASTE_YOUR_GOOGLE_MAPS_API_KEY_HERE") {
     return (
       <div className={`bg-gray-200 dark:bg-gray-700 flex flex-col items-center justify-center text-center p-2 text-sm text-gray-500 rounded ${className}`}>
         <MapPinIcon className="h-8 w-8 text-gray-400 mb-2" />
@@ -28,7 +27,7 @@ export const StaticMapPreview: React.FC<StaticMapPreviewProps> = ({ location, cl
 
   // Use a higher resolution for retina displays by default
   const scale = window.devicePixelRatio > 1 ? 2 : 1;
-  const mapUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${location.lat},${location.lng}&zoom=16&size=600x400&scale=${scale}&maptype=roadmap&markers=color:red%7C${location.lat},${location.lng}&key=${MAPS_API_KEY}`;
+  const mapUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${location.lat},${location.lng}&zoom=16&size=600x400&scale=${scale}&maptype=roadmap&markers=color:red%7C${location.lat},${location.lng}&key=${GOOGLE_MAPS_API_KEY}`;
   
   if (hasError) {
     return (

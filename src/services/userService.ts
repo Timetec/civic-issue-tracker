@@ -3,8 +3,7 @@ import * as mockApi from './mockApi';
 import * as apiClient from './apiClient';
 import type { User } from '../types';
 import { UserRole } from '../types';
-
-const USE_REAL_API = !!process.env.VITE_API_BASE_URL;
+import { USE_REAL_API } from '../config';
 
 export const getAllUsers = async (): Promise<Omit<User, 'password'>[]> => {
     if (USE_REAL_API) return apiClient.get<Omit<User, 'password'>[]>('/api/users');

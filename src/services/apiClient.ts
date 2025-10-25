@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.VITE_API_BASE_URL;
+import { API_BASE_URL } from '../config';
 
 const getAuthToken = (): string | null => {
   return localStorage.getItem('authToken');

@@ -5,8 +5,7 @@ import * as userService from './userService';
 import * as apiClient from './apiClient';
 import type { CivicIssue, Comment, User } from '../types';
 import { IssueStatus } from '../types';
-
-const USE_REAL_API = !!process.env.VITE_API_BASE_URL;
+import { USE_REAL_API } from '../config';
 
 // Helper to simulate network delay for mock API
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms));

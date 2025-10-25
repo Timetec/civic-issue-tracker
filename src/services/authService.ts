@@ -2,8 +2,8 @@ import * as mockApi from './mockApi';
 import * as apiClient from './apiClient';
 import type { User } from '../types';
 import { UserRole } from '../types';
+import { USE_REAL_API } from '../config';
 
-const USE_REAL_API = !!process.env.VITE_API_BASE_URL;
 const CURRENT_USER_KEY = 'civic-user';
 const AUTH_TOKEN_KEY = 'authToken';
 

@@ -1,17 +1,16 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import type { CategorizationResponse } from '../types';
+import { GEMINI_API_KEY } from '../config';
 
-// The API Key is now sourced directly from environment variables.
-const API_KEY = process.env.VITE_GEMINI_API_KEY;
 // This service is now only used for the mock API flow. In production, the backend handles Gemini calls.
-const ai = API_KEY ? new GoogleGenAI({ apiKey: API_KEY }) : null;
+const ai = (GEMINI_API_KEY && GEMINI_API_KEY !== "PASTE_YOUR_GEMINI_API_KEY_HERE") ? new GoogleGenAI({ apiKey: GEMINI_API_KEY }) : null;
 
 const model = 'gemini-2.5-flash';
 const issueCategories = ['Pothole', 'Garbage', 'Streetlight', 'Graffiti', 'Flooding', 'Damaged Signage', 'Other'];
 
 export const categorizeIssue = async (description: string, images?: {imageBase64: string, mimeType: string}[] | null): Promise<CategorizationResponse> => {
   if (!ai) {
-    console.warn("Gemini API key not found. Returning fallback categorization.");
+    console.warn("Gemini API key not found. Returning fallback categorization. Paste key in src/config.ts");
     return { category: 'Other', title: 'Issue Report (Fallback)' };
   }
 
