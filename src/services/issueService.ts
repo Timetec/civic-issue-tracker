@@ -118,6 +118,18 @@ export const getMyAssignedIssues = async (): Promise<CivicIssue[]> => {
     return mockApi.getAllIssues().filter(issue => issue.assignedTo === currentUser.email);
 };
 
+export const getRecentPublicIssues = async (): Promise<CivicIssue[]> => {
+    if (USE_REAL_API) return apiClient.get<CivicIssue[]>(`/api/issues/public/recent`);
+    
+    // Mock API Flow
+    await delay(500);
+    const allIssues = mockApi.getAllIssues();
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    return allIssues.filter(issue => new Date(issue.createdAt) >= sevenDaysAgo);
+};
+
 export const getIssuesByUser = async (identifier: string): Promise<CivicIssue[]> => {
     if (USE_REAL_API) return apiClient.get<CivicIssue[]>(`/api/issues/user/${identifier}`);
     const serviceUser = authService.getCurrentUser();

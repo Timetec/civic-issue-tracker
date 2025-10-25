@@ -21,6 +21,7 @@ const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<CurrentUser>(null);
   const [currentView, setCurrentView] = useState<AppView>('LANDING');
   const [issues, setIssues] = useState<CivicIssue[]>([]);
+  const [mapIssues, setMapIssues] = useState<CivicIssue[]>([]);
   const [workers, setWorkers] = useState<Omit<User, 'password'>[]>([]);
   const [isAppLoading, setIsAppLoading] = useState(true);
   const [isGlobalLoading, setIsGlobalLoading] = useState(false);
@@ -88,6 +89,25 @@ const App: React.FC = () => {
         fetchData();
     }
   }, [fetchData, currentView]);
+
+  useEffect(() => {
+    const fetchMapData = async () => {
+        if (showMapView && currentUser?.role === UserRole.Citizen) {
+            setIsGlobalLoading(true);
+            try {
+                const recentIssues = await issueService.getRecentPublicIssues();
+                setMapIssues(recentIssues);
+            } catch (e) {
+                setError('Failed to load map data. Please try again.');
+                console.error(e);
+            } finally {
+                setIsGlobalLoading(false);
+            }
+        }
+    };
+
+    fetchMapData();
+  }, [showMapView, currentUser]);
   
   const handleLogin = async (email: string, pass: string) => {
     setIsGlobalLoading(true);
@@ -286,7 +306,7 @@ const App: React.FC = () => {
                 </header>
                 {showMapView ? (
                   <MapView 
-                    issues={issues.filter(issue => issue.status !== IssueStatus.Resolved)} 
+                    issues={(currentUser.role === UserRole.Citizen ? mapIssues : issues).filter(issue => issue.status !== IssueStatus.Resolved)} 
                     currentUser={currentUser}
                   />
                 ) : (
