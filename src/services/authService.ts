@@ -14,6 +14,8 @@ const sanitizeUser = (user: User): Omit<User, 'password'> => {
 };
 
 export const loginUser = async (email: string, pass: string): Promise<Omit<User, 'password'> | null> => {
+  // Note: Passwords are sent plaintext over HTTPS, which is the standard security practice.
+  // The backend is responsible for hashing and comparing passwords.
   if (USE_REAL_API) {
     try {
       const response = await apiClient.post<{ token: string; user: User }>('/api/auth/login', { email, password: pass });
@@ -43,6 +45,8 @@ export const loginUser = async (email: string, pass: string): Promise<Omit<User,
 };
 
 export const registerUser = async (data: Omit<User, 'role' | 'password'> & {password: string}): Promise<Omit<User, 'password'> | null> => {
+    // Note: Passwords are sent plaintext over HTTPS, which is the standard security practice.
+    // The backend is responsible for securely hashing and storing the password.
     if (USE_REAL_API) {
         try {
             const response = await apiClient.post<{ token: string; user: User }>('/api/auth/register', { ...data, role: UserRole.Citizen });
