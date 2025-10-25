@@ -6,12 +6,13 @@ import { IssueDashboard } from './components/IssueDashboard';
 import { UserManagementPage } from './components/UserManagementPage';
 import { ProfileModal } from './components/ProfileModal';
 import { GlobalLoader } from './components/GlobalLoader';
+import { MapView } from './components/MapView';
 import * as authService from './services/authService';
 import * as issueService from './services/issueService';
 import * as userService from './services/userService';
 import type { CivicIssue, User } from './types';
 import { UserRole, IssueStatus } from './types';
-import { Spinner, UserCircleIcon, LogoutIcon, UserGroupIcon, PlusIcon } from './components/Icons';
+import { Spinner, UserCircleIcon, LogoutIcon, UserGroupIcon, PlusIcon, MapIcon, ListBulletIcon } from './components/Icons';
 
 type AppView = 'LANDING' | 'LOGIN' | 'DASHBOARD' | 'FORM' | 'MANAGE_USERS';
 type CurrentUser = Omit<User, 'password'> | null;
@@ -27,6 +28,7 @@ const App: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [showMapView, setShowMapView] = useState(false);
 
   const fetchData = useCallback(async () => {
     if (!currentUser) {
@@ -258,15 +260,22 @@ const App: React.FC = () => {
                 <header className="flex justify-between items-center mb-6">
                     <h1 className="text-3xl font-bold text-gray-800 dark:text-white truncate">Welcome, {currentUser.firstName}!</h1>
                     <div className="flex items-center space-x-2 md:space-x-4">
+                        {currentUser.role !== UserRole.Service && (
+                            <button onClick={() => setShowMapView(!showMapView)} title={showMapView ? "List View" : "Map View"} className="p-2 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">
+                                {showMapView ? <ListBulletIcon className="h-6 w-6"/> : <MapIcon className="h-6 w-6"/>}
+                            </button>
+                        )}
                         {currentUser.role === UserRole.Admin && (
                             <button onClick={() => setCurrentView('MANAGE_USERS')} title="Manage Users" className="p-2 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">
                                 <UserGroupIcon className="h-6 w-6"/>
                             </button>
                         )}
-                        <button onClick={() => setCurrentView('FORM')} className="px-3 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 flex items-center">
-                            <PlusIcon className="h-5 w-5 mr-1"/>
-                            <span className="hidden sm:inline">New Issue</span>
-                        </button>
+                        {currentUser.role !== UserRole.Service && (
+                            <button onClick={() => setCurrentView('FORM')} className="px-3 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 flex items-center">
+                                <PlusIcon className="h-5 w-5 mr-1"/>
+                                <span className="hidden sm:inline">New Issue</span>
+                            </button>
+                        )}
                          <button onClick={() => setIsProfileModalOpen(true)} title="My Profile" className="p-2 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">
                             <UserCircleIcon className="h-6 w-6"/>
                         </button>
@@ -275,7 +284,14 @@ const App: React.FC = () => {
                         </button>
                     </div>
                 </header>
-                <IssueDashboard issues={issues} onAdminUpdateStatus={handleAdminUpdateStatus} onCitizenResolveIssue={handleCitizenResolveIssue} currentUser={currentUser} onAdminAssignIssue={handleAdminAssignIssue} workers={workers} onAddComment={handleAddComment} />
+                {showMapView ? (
+                  <MapView 
+                    issues={issues.filter(issue => issue.status !== IssueStatus.Resolved)} 
+                    userRole={currentUser.role}
+                  />
+                ) : (
+                  <IssueDashboard issues={issues} onAdminUpdateStatus={handleAdminUpdateStatus} onCitizenResolveIssue={handleCitizenResolveIssue} currentUser={currentUser} onAdminAssignIssue={handleAdminAssignIssue} workers={workers} onAddComment={handleAddComment} />
+                )}
             </main>
           );
         }

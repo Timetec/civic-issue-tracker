@@ -22,6 +22,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, use
   
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
+  const [showPasswordChange, setShowPasswordChange] = useState(false);
 
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
 
@@ -43,6 +44,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, use
     setSuccess('');
     setOldPassword('');
     setNewPassword('');
+    setShowPasswordChange(false);
     // Reset fields to original user data on close
     if (user) {
         setFirstName(user.firstName);
@@ -84,6 +86,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, use
     if (success) {
       setOldPassword('');
       setNewPassword('');
+      setShowPasswordChange(false);
       showSuccessMessage('Password changed successfully!');
     } else {
       setError('Failed to change password. Check your current password.');
@@ -159,14 +162,42 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, use
         </div>
 
         <div className="pt-4 mt-4 border-t border-gray-200 dark:border-gray-700">
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-white">Change Password</h3>
-            <form onSubmit={handlePasswordSubmit} className="space-y-4 mt-2">
-                <input type="password" placeholder="Current Password" value={oldPassword} onChange={e => setOldPassword(e.target.value)} required className="w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white" />
-                <input type="password" placeholder="New Password" value={newPassword} onChange={e => setNewPassword(e.target.value)} required className="w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white" />
-                <div className="flex justify-end">
-                    <button type="submit" disabled={isLoading} className="px-4 py-2 text-sm rounded-md bg-red-600 text-white flex items-center">{isLoading && <Spinner className="h-4 w-4 mr-2" />} Change Password</button>
-                </div>
-            </form>
+            <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-white">Change Password</h3>
+                {!showPasswordChange && (
+                    <button
+                        onClick={() => {
+                            setShowPasswordChange(true);
+                            setError('');
+                            setSuccess('');
+                        }}
+                        className="px-4 py-2 text-sm rounded-md bg-indigo-600 text-white hover:bg-indigo-700"
+                    >
+                        Change
+                    </button>
+                )}
+            </div>
+            {showPasswordChange && (
+                <form onSubmit={handlePasswordSubmit} className="space-y-4 mt-2">
+                    <input type="password" placeholder="Current Password" value={oldPassword} onChange={e => setOldPassword(e.target.value)} required className="w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white" />
+                    <input type="password" placeholder="New Password" value={newPassword} onChange={e => setNewPassword(e.target.value)} required className="w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white" />
+                    <div className="flex justify-end space-x-2">
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setShowPasswordChange(false);
+                                setOldPassword('');
+                                setNewPassword('');
+                                setError('');
+                            }}
+                            className="px-4 py-2 text-sm rounded-md bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200"
+                        >
+                            Cancel
+                        </button>
+                        <button type="submit" disabled={isLoading} className="px-4 py-2 text-sm rounded-md bg-red-600 text-white flex items-center">{isLoading && <Spinner className="h-4 w-4 mr-2" />} Update Password</button>
+                    </div>
+                </form>
+            )}
         </div>
       </div>
     </Modal>
