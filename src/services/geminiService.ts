@@ -1,14 +1,15 @@
-
+// Fix: Add triple-slash directive to include Vite client types and resolve import.meta.env error.
+/// <reference types="vite/client" />
 
 import { GoogleGenAI, Type } from "@google/genai";
 import type { CategorizationResponse } from '../types';
 
-const API_KEY = process.env.API_KEY;
+const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
 if (!API_KEY) {
   // This is a placeholder for environments where the API_KEY is not set.
   // In the target environment, this should be provided.
-  console.warn("API_KEY environment variable not set. Gemini API calls will fail.");
+  console.warn("VITE_GEMINI_API_KEY environment variable not set. Gemini API calls will fail.");
 }
 
 // Fix: Added a null check for API_KEY to avoid passing undefined.

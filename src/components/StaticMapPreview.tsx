@@ -1,36 +1,10 @@
+// Fix: Add triple-slash directive to include Vite client types and resolve import.meta.env error.
+/// <reference types="vite/client" />
+
 import React, { useState, useEffect } from 'react';
 import { MapPinIcon } from './Icons';
 
-// Helper to extract the Google Maps API key from the script tag in the DOM.
-// This is a workaround for environments where process.env is not available client-side.
-const getGoogleMapsApiKey = (): string | null => {
-  // Memoize the result so we don't scan the DOM every time.
-  if ((window as any)._googleMapsApiKey) return (window as any)._googleMapsApiKey;
-  if ((window as any)._googleMapsApiKey === null) return null; // Already failed once.
-
-  const scripts = Array.from(document.scripts);
-  const mapsScript = scripts.find(script => script.src.includes('maps.googleapis.com/maps/api/js'));
-  
-  if (mapsScript) {
-    try {
-      const url = new URL(mapsScript.src);
-      const key = url.searchParams.get('key');
-       // Don't cache a placeholder key
-      if (key === 'YOUR_GOOGLE_MAPS_API_KEY') {
-        return null;
-      }
-      (window as any)._googleMapsApiKey = key;
-      return key;
-    } catch (e) {
-      console.error("Could not parse Google Maps script URL", e);
-      (window as any)._googleMapsApiKey = null;
-      return null;
-    }
-  }
-  (window as any)._googleMapsApiKey = null;
-  return null;
-};
-
+const MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
 interface StaticMapPreviewProps {
   location: { lat: number; lng: number };
@@ -39,7 +13,6 @@ interface StaticMapPreviewProps {
 
 export const StaticMapPreview: React.FC<StaticMapPreviewProps> = ({ location, className }) => {
   const [hasError, setHasError] = useState(false);
-  const MAPS_API_KEY = getGoogleMapsApiKey();
   
   // Reset error state if location changes, so we can retry loading the image.
   useEffect(() => {

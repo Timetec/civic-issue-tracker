@@ -318,7 +318,8 @@ const App: React.FC = () => {
         return <LandingPage onGetStarted={() => setCurrentView('LOGIN')} currentUser={currentUser} onGoToDashboard={() => setCurrentView('DASHBOARD')} onLogout={handleLogout} onReportIssueNow={() => setCurrentView(currentUser ? 'FORM' : 'LOGIN')} />;
     }
     // Fallback
-    return <LandingPage onGetStarted={() => setCurrentView('LOGIN')} currentUser={currentUser} onGoToDashboard={() => setCurrentView('DASHBOARD')} />;
+    // Fix: Added missing 'onReportIssueNow' prop to satisfy LandingPageProps.
+    return <LandingPage onGetStarted={() => setCurrentView('LOGIN')} currentUser={currentUser} onGoToDashboard={() => setCurrentView('DASHBOARD')} onReportIssueNow={() => setCurrentView(currentUser ? 'FORM' : 'LOGIN')} />;
   };
 
   return (

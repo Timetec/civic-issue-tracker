@@ -36,6 +36,7 @@ This project was built to address the common challenge of inefficient and opaque
 ## 🛠️ Technology Stack
 
 *   **Frontend**: React, TypeScript, Tailwind CSS
+*   **Build Tool**: Vite
 *   **Generative AI**: Google Gemini API (`gemini-2.5-flash`) for AI-powered issue categorization and title generation.
 *   **Maps & Geolocation**: Google Maps Platform
     *   **Maps JavaScript API**: For interactive map modals and static map previews.
@@ -50,8 +51,8 @@ Follow these instructions to get a local copy up and running for development and
 
 ### Prerequisites
 
-*   A modern web browser (Chrome, Firefox, Safari, Edge)
-*   Access to the project files.
+*   [Node.js](https://nodejs.org/) (which includes npm) installed on your machine.
+*   A modern web browser (Chrome, Firefox, Safari, Edge).
 
 ### Installation & Setup
 
@@ -61,31 +62,51 @@ Follow these instructions to get a local copy up and running for development and
     cd civic-issue-tracker
     ```
 
-2.  **Configure API Keys**
-    This project requires two API keys from Google.
+2.  **Install Dependencies**
+    ```sh
+    npm install
+    ```
 
-    *   **Google Gemini API Key**:
-        1.  Obtain an API key from [Google AI Studio](https://aistudio.google.com/app/apikey).
-        2.  This project is set up to read the key from an environment variable (`process.env.API_KEY`) which is typically configured in the hosting environment.
+3.  **Configure API Keys**
+    This project requires two API keys from Google. You'll need to create a `.env` file in the root of the project to store them.
 
-    *   **Google Maps Platform API Key**:
-        1.  Go to the [Google Cloud Console](https://console.cloud.google.com/) and create a new project.
-        2.  Enable the following three (3) APIs for your project:
-            *   **Maps JavaScript API**
-            *   **Geocoding API**
-            *   **Maps Static API**
-        3.  Create a new API Key under "Credentials".
-        4.  **Important**: For security, restrict your API key!
-            *   Under "Application restrictions," select "Websites" and add the URLs where you will host the app (e.g., `http://localhost:3000`, `*.your-domain.com`).
-            *   Under "API restrictions," select "Restrict key" and choose only the **Maps JavaScript API**, **Geocoding API**, and **Maps Static API**.
-        5.  Open the `index.html` file and replace the placeholder `YOUR_GOOGLE_MAPS_API_KEY` with your actual Google Maps API key:
-            ```html
-            <!-- in index.html -->
-            <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=marker"></script>
-            ```
+    *   Create the file:
+        ```sh
+        touch .env
+        ```
+    *   Add the following content to your new `.env` file, replacing the placeholders with your actual keys:
+        ```env
+        VITE_GEMINI_API_KEY=YOUR_GEMINI_API_KEY
+        VITE_GOOGLE_MAPS_API_KEY=YOUR_GOOGLE_MAPS_API_KEY
+        ```
 
-3.  **Run the Application**
-    Simply open the `index.html` file in your web browser. You can use a simple web server or a live server extension in your code editor for the best experience.
+    *   **To get your keys:**
+        *   **Google Gemini API Key**: Obtain an API key from [Google AI Studio](https://aistudio.google.com/app/apikey).
+        *   **Google Maps Platform API Key**:
+            1.  Go to the [Google Cloud Console](https://console.cloud.google.com/) and create a new project.
+            2.  Enable the following three (3) APIs for your project:
+                *   **Maps JavaScript API**
+                *   **Geocoding API**
+                *   **Maps Static API**
+            3.  Create a new API Key under "Credentials".
+            4.  **Important**: For security, restrict your API key to your development and production domains.
+
+4.  **Run the Application**
+    Start the local development server:
+    ```sh
+    npm run dev
+    ```
+    The application will be available at `http://localhost:5173` (or another port if 5173 is busy).
+
+## Deployment
+
+This project is configured for easy deployment on platforms like Vercel or Netlify.
+
+1. Push your code to a Git repository (GitHub, GitLab, etc.).
+2. Import the repository into your hosting provider.
+3. Configure the same environment variables (`VITE_GEMINI_API_KEY` and `VITE_GOOGLE_MAPS_API_KEY`) in your provider's settings.
+4. The build command is `npm run build` and the output directory is `dist`. This is usually detected automatically.
+5. Deploy!
 
 ---
 
