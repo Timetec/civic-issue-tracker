@@ -7,6 +7,7 @@ import { UserManagementPage } from './components/UserManagementPage';
 import { ProfileModal } from './components/ProfileModal';
 import { GlobalLoader } from './components/GlobalLoader';
 import { MapView } from './components/MapView';
+import { Chatbot } from './components/Chatbot';
 import * as authService from './services/authService';
 import * as issueService from './services/issueService';
 import * as userService from './services/userService';
@@ -366,6 +367,7 @@ const App: React.FC = () => {
         onChangePassword={handleChangePassword}
         onUpdateLocation={handleUpdateLocation}
       />
+      {currentUser && currentUser.role === UserRole.Citizen && <Chatbot />}
     </div>
   );
 };
