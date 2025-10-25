@@ -21,11 +21,11 @@ export interface Comment {
 }
 
 export interface CivicIssue {
-  id: string;
+  id:string;
   title: string;
   description: string;
   category: string;
-  photoUrl: string;
+  photoUrls: string[];
   location: {
     lat: number;
     lng: number;

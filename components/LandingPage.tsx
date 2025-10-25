@@ -174,7 +174,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, currentU
                              const styles = statusStyles[issue.status];
                              return (
                                 <div key={issue.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden flex flex-col">
-                                    <img src={issue.photoUrl} alt={issue.title} className="w-full h-48 object-cover" />
+                                    <img src={issue.photoUrls[0]} alt={issue.title} className="w-full h-48 object-cover" />
                                     <div className="p-4 flex flex-col flex-grow">
                                         <div className="flex justify-between items-start">
                                             <span className="text-sm font-semibold text-indigo-600 dark:text-indigo-400">{issue.category}</span>

@@ -70,14 +70,15 @@ Follow these instructions to get a local copy up and running for development and
 
     *   **Google Maps Platform API Key**:
         1.  Go to the [Google Cloud Console](https://console.cloud.google.com/) and create a new project.
-        2.  Enable the following two (2) APIs for your project:
+        2.  Enable the following three (3) APIs for your project:
             *   **Maps JavaScript API**
             *   **Geocoding API**
+            *   **Maps Static API**
         3.  Create a new API Key under "Credentials".
         4.  **Important**: For security, restrict your API key!
             *   Under "Application restrictions," select "Websites" and add the URLs where you will host the app (e.g., `http://localhost:3000`, `*.your-domain.com`).
-            *   Under "API restrictions," select "Restrict key" and choose only the **Maps JavaScript API** and **Geocoding API**.
-        5.  Open the `index.html` file and replace the placeholder `google_api_key` with your actual Google Maps API key:
+            *   Under "API restrictions," select "Restrict key" and choose only the **Maps JavaScript API**, **Geocoding API**, and **Maps Static API**.
+        5.  Open the `index.html` file and replace the placeholder `YOUR_GOOGLE_MAPS_API_KEY` with your actual Google Maps API key:
             ```html
             <!-- in index.html -->
             <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=marker"></script>

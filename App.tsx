@@ -128,11 +128,11 @@ const App: React.FC = () => {
     setWorkers([]);
   };
 
-  const handleIssueSubmit = async (description: string, photo: File | null, location: { lat: number; lng: number }) => {
+  const handleIssueSubmit = async (description: string, photos: File[], location: { lat: number; lng: number }) => {
     setIsSubmitting(true);
     setIsGlobalLoading(true);
     try {
-      await issueService.addIssue(description, photo, location);
+      await issueService.addIssue(description, photos, location);
       await fetchData(); // Refresh data
       setCurrentView('DASHBOARD');
     } catch (e) {

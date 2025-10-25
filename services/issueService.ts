@@ -60,7 +60,7 @@ const fileToBase64 = (file: File): Promise<{ base64: string; mimeType: string }>
 
 export const addIssue = async (
   description: string,
-  photo: File | null,
+  photos: File[] | null,
   location: { lat: number; lng: number }
 ): Promise<CivicIssue> => {
   try {
@@ -69,24 +69,28 @@ export const addIssue = async (
       throw new Error("User not authenticated to add an issue.");
     }
     
-    let imageBase64: string | null = null;
-    let mimeType: string | null = null;
-    let photoUrl: string = 'https://placehold.co/600x400/e2e8f0/cbd5e0/png?text=No+Image';
+    const geminiImages: { imageBase64: string; mimeType: string }[] = [];
+    let photoUrls: string[] = [];
+    const defaultPhotoUrl = 'https://placehold.co/600x400/e2e8f0/cbd5e0/png?text=No+Image';
 
-    if (photo) {
-      const convertedFile = await fileToBase64(photo);
-      imageBase64 = convertedFile.base64;
-      mimeType = convertedFile.mimeType;
-      photoUrl = await api.apiUploadPhoto(photo);
+    if (photos && photos.length > 0) {
+      const uploadPromises = photos.map(async (photo) => {
+        const { base64, mimeType } = await fileToBase64(photo);
+        geminiImages.push({ imageBase64: base64, mimeType });
+        return await api.apiUploadPhoto(photo);
+      });
+      photoUrls = await Promise.all(uploadPromises);
+    } else {
+      photoUrls = [defaultPhotoUrl];
     }
     
-    const { category, title } = await geminiService.categorizeIssue(description, imageBase64, mimeType);
+    const { category, title } = await geminiService.categorizeIssue(description, geminiImages.length > 0 ? geminiImages : null);
     
     const newIssueData = {
         title,
         description,
         category,
-        photoUrl,
+        photoUrls,
         location,
         reporterId: currentUser.email,
         reporterName: `${currentUser.firstName} ${currentUser.lastName}`

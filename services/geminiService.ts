@@ -17,20 +17,22 @@ const ai = new GoogleGenAI({ apiKey: API_KEY || "" });
 const model = 'gemini-2.5-flash';
 const issueCategories = ['Pothole', 'Garbage', 'Streetlight', 'Graffiti', 'Flooding', 'Damaged Signage', 'Other'];
 
-export const categorizeIssue = async (description: string, imageBase64?: string | null, mimeType?: string | null): Promise<CategorizationResponse> => {
+export const categorizeIssue = async (description: string, images?: {imageBase64: string, mimeType: string}[] | null): Promise<CategorizationResponse> => {
   try {
     const parts: ({ inlineData: { mimeType: string; data: string; }; } | { text: string; })[] = [];
     let promptText: string;
 
-    if (imageBase64 && mimeType) {
-      const imagePart = {
-        inlineData: {
-          mimeType: mimeType,
-          data: imageBase64,
-        },
-      };
-      parts.push(imagePart);
-      promptText = `Analyze the user's report about a civic issue. Based on the description and image, categorize it into one of the following: ${issueCategories.join(', ')}. Also, create a concise title for the report.
+    if (images && images.length > 0) {
+      images.forEach(image => {
+        const imagePart = {
+          inlineData: {
+            mimeType: image.mimeType,
+            data: image.imageBase64,
+          },
+        };
+        parts.push(imagePart);
+      });
+      promptText = `Analyze the user's report about a civic issue. Based on the description and image(s), categorize it into one of the following: ${issueCategories.join(', ')}. Also, create a concise title for the report.
 
       User Description: "${description}"
 

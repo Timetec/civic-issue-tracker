@@ -47,7 +47,7 @@ const initializeData = () => {
             title: 'Large Pothole on Main St',
             description: 'A very large and dangerous pothole has formed in the eastbound lane of Main St, just past the intersection with Oak Ave.',
             category: 'Pothole',
-            photoUrl: 'https://placehold.co/600x400/cccccc/000000/png?text=Pothole',
+            photoUrls: ['https://placehold.co/600x400/cccccc/000000/png?text=Pothole'],
             location: { lat: 34.055, lng: -118.245 },
             status: IssueStatus.InProgress,
             createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
@@ -65,7 +65,7 @@ const initializeData = () => {
             title: 'Graffiti on Park Wall',
             description: 'The main wall of Central Park has been vandalized with spray paint.',
             category: 'Graffiti',
-            photoUrl: 'https://placehold.co/600x400/cccccc/000000/png?text=Graffiti',
+            photoUrls: ['https://placehold.co/600x400/cccccc/000000/png?text=Graffiti'],
             location: { lat: 34.155, lng: -118.349 },
             status: IssueStatus.InProgress,
             createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
@@ -80,7 +80,7 @@ const initializeData = () => {
             title: 'Flickering Streetlight',
             description: 'The streetlight at the corner of 5th and Elm is flickering constantly and needs to be replaced.',
             category: 'Streetlight',
-            photoUrl: 'https://placehold.co/600x400/cccccc/000000/png?text=Streetlight',
+            photoUrls: ['https://placehold.co/600x400/cccccc/000000/png?text=Streetlight'],
             location: { lat: 34.06, lng: -118.25 },
             status: IssueStatus.InProgress,
             createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
@@ -97,7 +97,7 @@ const initializeData = () => {
             title: 'Overflowing Trash Can at Park Entrance',
             description: 'The trash can at the main entrance to Central Park is completely full and overflowing. Needs to be emptied.',
             category: 'Garbage',
-            photoUrl: 'https://placehold.co/600x400/cccccc/000000/png?text=Garbage',
+            photoUrls: ['https://placehold.co/600x400/cccccc/000000/png?text=Garbage'],
             location: { lat: 34.156, lng: -118.350 },
             status: IssueStatus.Resolved,
             createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
@@ -115,7 +115,7 @@ const initializeData = () => {
             title: 'Damaged Stop Sign',
             description: 'The stop sign at the corner of Pine and 3rd is bent and hard to see.',
             category: 'Damaged Signage',
-            photoUrl: 'https://placehold.co/600x400/cccccc/000000/png?text=Signage',
+            photoUrls: ['https://placehold.co/600x400/cccccc/000000/png?text=Signage'],
             location: { lat: 34.051, lng: -118.240 },
             status: IssueStatus.Resolved,
             createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000), // 10 days ago

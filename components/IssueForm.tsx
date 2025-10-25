@@ -4,14 +4,14 @@ import { MapModal } from './MapModal';
 import { StaticMapPreview } from './StaticMapPreview';
 
 interface IssueFormProps {
-  onSubmit: (description: string, photo: File | null, location: { lat: number; lng: number }) => void;
+  onSubmit: (description: string, photos: File[], location: { lat: number; lng: number }) => void;
   isSubmitting: boolean;
 }
 
 export const IssueForm: React.FC<IssueFormProps> = ({ onSubmit, isSubmitting }) => {
   const [description, setDescription] = useState('');
-  const [photo, setPhoto] = useState<File | null>(null);
-  const [photoPreview, setPhotoPreview] =useState<string | null>(null);
+  const [photos, setPhotos] = useState<File[]>([]);
+  const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
@@ -19,15 +19,27 @@ export const IssueForm: React.FC<IssueFormProps> = ({ onSubmit, isSubmitting }) 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setPhoto(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPhotoPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+    if (e.target.files) {
+      const filesArray = Array.from(e.target.files);
+      setPhotos(prevPhotos => [...prevPhotos, ...filesArray]);
+
+      filesArray.forEach(file => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setPhotoPreviews(prevPreviews => [...prevPreviews, reader.result as string]);
+        };
+        reader.readAsDataURL(file);
+      });
+      // Clear the input value to allow selecting the same file again if needed
+      if (e.target) {
+        e.target.value = '';
+      }
     }
+  };
+
+  const removePhoto = (indexToRemove: number) => {
+    setPhotos(photos.filter((_, index) => index !== indexToRemove));
+    setPhotoPreviews(photoPreviews.filter((_, index) => index !== indexToRemove));
   };
 
   const handleGetLocation = () => {
@@ -56,7 +68,7 @@ export const IssueForm: React.FC<IssueFormProps> = ({ onSubmit, isSubmitting }) 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (description && location) {
-      onSubmit(description, photo, location);
+      onSubmit(description, photos, location);
     } else {
       alert('Please fill out the description and provide your location.');
     }
@@ -83,23 +95,34 @@ export const IssueForm: React.FC<IssueFormProps> = ({ onSubmit, isSubmitting }) 
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Photo (Optional)</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Photos (Optional)</label>
+            {photoPreviews.length > 0 && (
+              <div className="mt-2 grid grid-cols-3 sm:grid-cols-4 gap-2">
+                {photoPreviews.map((preview, index) => (
+                  <div key={index} className="relative group">
+                    <img src={preview} alt={`Preview ${index + 1}`} className="h-24 w-full object-cover rounded-md" />
+                    <button
+                      type="button"
+                      onClick={() => removePhoto(index)}
+                      className="absolute top-0 right-0 -mt-1 -mr-1 bg-red-600 text-white rounded-full h-5 w-5 flex items-center justify-center text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity"
+                      aria-label="Remove photo"
+                    >
+                      &times;
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
             <div
-              className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-md cursor-pointer"
+              className="mt-2 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-md cursor-pointer"
               onClick={() => fileInputRef.current?.click()}
             >
               <div className="space-y-1 text-center">
-                {photoPreview ? (
-                  <img src={photoPreview} alt="Preview" className="mx-auto h-32 w-auto object-cover rounded-md" />
-                ) : (
-                  <>
-                    <CameraIcon className="mx-auto h-12 w-12 text-gray-400" />
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      <span className="font-medium text-indigo-600 dark:text-indigo-400">Upload a file</span> or click here
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-500">PNG, JPG, GIF up to 10MB</p>
-                  </>
-                )}
+                 <CameraIcon className="mx-auto h-12 w-12 text-gray-400" />
+                 <p className="text-sm text-gray-600 dark:text-gray-400">
+                   <span className="font-medium text-indigo-600 dark:text-indigo-400">Upload files</span> or click here
+                 </p>
+                 <p className="text-xs text-gray-500 dark:text-gray-500">Add one or more photos</p>
               </div>
               <input
                 ref={fileInputRef}
@@ -108,6 +131,7 @@ export const IssueForm: React.FC<IssueFormProps> = ({ onSubmit, isSubmitting }) 
                 type="file"
                 className="sr-only"
                 accept="image/*"
+                multiple
                 onChange={handlePhotoChange}
               />
             </div>
@@ -131,7 +155,7 @@ export const IssueForm: React.FC<IssueFormProps> = ({ onSubmit, isSubmitting }) 
             {locationError && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{locationError}</p>}
             {location && (
                 <div className="mt-4">
-                  <StaticMapPreview location={location} />
+                  <StaticMapPreview location={location} className="h-40 w-full rounded-md" />
                   <button type="button" onClick={() => setIsMapModalOpen(true)} className="mt-2 w-full text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:underline">
                       Adjust Location on Map
                   </button>

@@ -1,7 +1,8 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import type { CivicIssue, User } from '../types';
 import { IssueStatus, UserRole } from '../types';
 import { IssueCard } from './IssueCard';
+import { IssueDetailModal } from './IssueDetailModal'; // Import the new modal
 import * as issueService from '../services/issueService';
 import { Spinner } from './Icons';
 
@@ -17,6 +18,7 @@ interface IssueDashboardProps {
 
 export const IssueDashboard: React.FC<IssueDashboardProps> = ({ issues, onAdminUpdateStatus, onCitizenResolveIssue, currentUser, onAdminAssignIssue, workers, onAddComment }) => {
   const [filter, setFilter] = useState<IssueStatus | null>(null);
+  const [selectedIssue, setSelectedIssue] = useState<CivicIssue | null>(null);
 
   // State for Service user search
   const [searchQuery, setSearchQuery] = useState('');
@@ -29,6 +31,21 @@ export const IssueDashboard: React.FC<IssueDashboardProps> = ({ issues, onAdminU
   const [searchedIssueById, setSearchedIssueById] = useState<CivicIssue | null>(null);
   const [isSearchingById, setIsSearchingById] = useState(false);
   const [searchByIdError, setSearchByIdError] = useState('');
+
+  // When the main issues list is updated (e.g., after an action),
+  // refresh the data in the currently open modal to reflect the change.
+  useEffect(() => {
+    if (selectedIssue) {
+      const updatedIssue = issues.find(issue => issue.id === selectedIssue.id);
+      if (updatedIssue) {
+        setSelectedIssue(updatedIssue);
+      } else {
+        // The issue might have been deleted or is no longer visible, so close the modal.
+        setSelectedIssue(null);
+      }
+    }
+  }, [issues, selectedIssue]);
+
 
   const handleSearchByUser = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -119,15 +136,12 @@ export const IssueDashboard: React.FC<IssueDashboardProps> = ({ issues, onAdminU
             <p className="text-gray-500 dark:text-gray-400">Search for a user to see their reported issues.</p>
           </div>
         ) : sortedIssues.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {sortedIssues.map(issue => (
               <IssueCard 
                 key={issue.id} 
                 issue={issue} 
-                onAdminUpdateStatus={onAdminUpdateStatus} 
-                onCitizenResolveIssue={onCitizenResolveIssue}
-                currentUser={currentUser} 
-                onAddComment={onAddComment}
+                onClick={() => setSelectedIssue(issue)}
               />
             ))}
           </div>
@@ -142,81 +156,92 @@ export const IssueDashboard: React.FC<IssueDashboardProps> = ({ issues, onAdminU
   
   // Regular dashboard for other users
   return (
-    <div className="p-4 md:p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
-      <div className="flex flex-col md:flex-row justify-between md:items-center mb-6 gap-4">
-        <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Civic Issues Dashboard</h2>
-        
-        {isSearchableRole && (
-          <div className="flex-shrink-0">
-            <form onSubmit={handleSearchById} className="flex gap-2 items-center">
-              <input
-                type="text"
-                value={idSearchQuery}
-                onChange={(e) => setIdSearchQuery(e.target.value)}
-                placeholder="Search by Issue ID..."
-                className="w-48 block border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 px-3 py-1.5"
-              />
-              <button type="submit" disabled={isSearchingById || !idSearchQuery} className="px-4 py-1.5 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-indigo-400 flex justify-center items-center">
-                  {isSearchingById ? <Spinner className="h-5 w-5" /> : 'Find'}
-              </button>
-              {(searchedIssueById || idSearchQuery) && (
-                <button type="button" onClick={handleClearIdSearch} className="px-4 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-200 dark:bg-gray-600 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
-                  Clear
+    <>
+      <div className="p-4 md:p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
+        <div className="flex flex-col md:flex-row justify-between md:items-center mb-6 gap-4">
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Civic Issues Dashboard</h2>
+          
+          {isSearchableRole && (
+            <div className="flex-shrink-0">
+              <form onSubmit={handleSearchById} className="flex gap-2 items-center">
+                <input
+                  type="text"
+                  value={idSearchQuery}
+                  onChange={(e) => setIdSearchQuery(e.target.value)}
+                  placeholder="Search by Issue ID..."
+                  className="w-48 block border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 px-3 py-1.5"
+                />
+                <button type="submit" disabled={isSearchingById || !idSearchQuery} className="px-4 py-1.5 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-indigo-400 flex justify-center items-center">
+                    {isSearchingById ? <Spinner className="h-5 w-5" /> : 'Find'}
                 </button>
-              )}
-            </form>
-            {searchByIdError && <p className="text-red-500 dark:text-red-400 mt-1 text-xs text-right">{searchByIdError}</p>}
+                {(searchedIssueById || idSearchQuery) && (
+                  <button type="button" onClick={handleClearIdSearch} className="px-4 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-200 dark:bg-gray-600 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                    Clear
+                  </button>
+                )}
+              </form>
+              {searchByIdError && <p className="text-red-500 dark:text-red-400 mt-1 text-xs text-right">{searchByIdError}</p>}
+            </div>
+          )}
+        </div>
+
+        <div className="mb-6">
+          <div className="flex flex-wrap gap-2 justify-center">
+            <button
+              onClick={() => setFilter(null)}
+              className={`px-4 py-2 text-sm font-medium rounded-full ${!filter ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200'}`}
+            >
+              All
+            </button>
+            {Object.values(IssueStatus).map(status => (
+              <button
+                key={status}
+                onClick={() => setFilter(status)}
+                className={`px-4 py-2 text-sm font-medium rounded-full ${filter === status ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200'}`}
+              >
+                {status}
+              </button>
+            ))}
+          </div>
+        </div>
+        
+        {sortedIssues.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {sortedIssues.map(issue => (
+              <IssueCard 
+                  key={issue.id} 
+                  issue={issue} 
+                  onClick={() => setSelectedIssue(issue)}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+              <p className="text-gray-500 dark:text-gray-400">
+                  { searchedIssueById ? "This is the only issue matching your search."
+                    : idSearchQuery ? "Searching..." 
+                    : currentUser.role === UserRole.Worker ? "You have no issues assigned to you." 
+                    : currentUser.role === UserRole.Citizen ? "You have not reported any issues yet."
+                    : "No issues found for this filter."
+                  }
+              </p>
           </div>
         )}
       </div>
-
-      <div className="mb-6">
-        <div className="flex flex-wrap gap-2 justify-center">
-          <button
-            onClick={() => setFilter(null)}
-            className={`px-4 py-2 text-sm font-medium rounded-full ${!filter ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200'}`}
-          >
-            All
-          </button>
-          {Object.values(IssueStatus).map(status => (
-            <button
-              key={status}
-              onClick={() => setFilter(status)}
-              className={`px-4 py-2 text-sm font-medium rounded-full ${filter === status ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200'}`}
-            >
-              {status}
-            </button>
-          ))}
-        </div>
-      </div>
       
-      {sortedIssues.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
-          {sortedIssues.map(issue => (
-            <IssueCard 
-                key={issue.id} 
-                issue={issue} 
-                onAdminUpdateStatus={onAdminUpdateStatus} 
-                onCitizenResolveIssue={onCitizenResolveIssue}
-                currentUser={currentUser}
-                onAdminAssignIssue={onAdminAssignIssue}
-                workers={workers}
-                onAddComment={onAddComment}
-            />
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-12">
-            <p className="text-gray-500 dark:text-gray-400">
-                { searchedIssueById ? "This is the only issue matching your search."
-                  : idSearchQuery ? "Searching..." 
-                  : currentUser.role === UserRole.Worker ? "You have no issues assigned to you." 
-                  : currentUser.role === UserRole.Citizen ? "You have not reported any issues yet."
-                  : "No issues found for this filter."
-                }
-            </p>
-        </div>
+      {selectedIssue && (
+        <IssueDetailModal
+          issue={selectedIssue}
+          isOpen={!!selectedIssue}
+          onClose={() => setSelectedIssue(null)}
+          currentUser={currentUser}
+          workers={workers}
+          onAdminUpdateStatus={onAdminUpdateStatus}
+          onCitizenResolveIssue={onCitizenResolveIssue}
+          onAdminAssignIssue={onAdminAssignIssue}
+          onAddComment={onAddComment}
+        />
       )}
-    </div>
+    </>
   );
 };
