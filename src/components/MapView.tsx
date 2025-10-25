@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import type { CivicIssue, UserRole } from '../types';
 import { IssueStatus } from '../types';
-import { IssueDetailModal } from './IssueDetailModal'; // Assuming this will be created
 
 const issueStatusColors: Record<IssueStatus, string> = {
   [IssueStatus.Pending]: '#EF4444', // red-500
@@ -15,13 +14,30 @@ interface MapViewProps {
   userRole: UserRole;
 }
 
+const timeAgo = (date: Date) => {
+    const seconds = Math.floor((new Date().getTime() - new Date(date).getTime()) / 1000);
+    const pluralize = (count: number, noun: string) => `${count} ${noun}${count !== 1 ? 's' : ''} ago`;
+
+    let interval = seconds / 31536000;
+    if (interval > 1) return pluralize(Math.floor(interval), "year");
+    interval = seconds / 2592000;
+    if (interval > 1) return pluralize(Math.floor(interval), "month");
+    interval = seconds / 86400;
+    if (interval > 1) return pluralize(Math.floor(interval), "day");
+    interval = seconds / 3600;
+    if (interval > 1) return pluralize(Math.floor(interval), "hour");
+    interval = seconds / 60;
+    if (interval > 1) return pluralize(Math.floor(interval), "minute");
+    return pluralize(Math.floor(seconds), "second");
+};
+
 export const MapView: React.FC<MapViewProps> = ({ issues, userRole }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   // Fix: Replace google.maps types with `any` to resolve namespace errors.
   const [map, setMap] = useState<any | null>(null);
   const [markers, setMarkers] = useState<any[]>([]);
   const [userMarker, setUserMarker] = useState<any | null>(null);
-  const [selectedIssue, setSelectedIssue] = useState<CivicIssue | null>(null);
+  const [infoWindow, setInfoWindow] = useState<any | null>(null);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
 
   // Effect to get user's location
@@ -41,7 +57,7 @@ export const MapView: React.FC<MapViewProps> = ({ issues, userRole }) => {
     }
   }, []);
 
-  // Effect to initialize map
+  // Effect to initialize map and InfoWindow
   useEffect(() => {
     if (mapRef.current && !map && (window as any).google && (window as any).google.maps) {
       // Fix: Cast window to `any` to access the google maps API.
@@ -54,17 +70,26 @@ export const MapView: React.FC<MapViewProps> = ({ issues, userRole }) => {
         fullscreenControl: false,
       });
       setMap(newMap);
+      setInfoWindow(new (window as any).google.maps.InfoWindow());
     }
   }, [mapRef, map]);
 
   // Effect to draw markers (issues and user)
   useEffect(() => {
-    if (map && (window as any).google && (window as any).google.maps) {
+    if (map && infoWindow && (window as any).google && (window as any).google.maps) {
+      // Close any open info window when issues change
+      infoWindow.close();
+      
       // Clear old issue markers
       markers.forEach(marker => marker.setMap(null));
       const newMarkers: any[] = [];
       // Fix: Use `(window as any).google` to access maps functionality.
       const bounds = new (window as any).google.maps.LatLngBounds();
+
+      // Close infowindow on map click
+      map.addListener('click', () => {
+        infoWindow.close();
+      });
 
       // Draw issue markers
       issues.forEach(issue => {
@@ -88,7 +113,25 @@ export const MapView: React.FC<MapViewProps> = ({ issues, userRole }) => {
         });
 
         marker.addListener('click', () => {
-          setSelectedIssue(issue);
+          const shortDescription = issue.description.length > 100 
+            ? issue.description.substring(0, 100) + '...' 
+            : issue.description;
+
+            const contentString = `
+            <div style="font-family: Arial, sans-serif; font-size: 14px; color: #333; max-width: 250px; padding: 5px;">
+              <h3 style="font-size: 16px; font-weight: 600; margin: 0 0 8px 0; color: #1a1a1a;">${issue.title}</h3>
+              <p style="margin: 0 0 10px 0; line-height: 1.4; font-size: 13px;">${shortDescription}</p>
+              <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #eee; padding-top: 8px; font-size: 12px;">
+                <span style="font-weight: 500; color: ${issueStatusColors[issue.status]};">${issue.status}</span>
+                <span style="color: #666;">${timeAgo(issue.createdAt)}</span>
+              </div>
+            </div>`;
+
+          infoWindow.setContent(contentString);
+          infoWindow.open({
+            anchor: marker,
+            map,
+          });
         });
 
         newMarkers.push(marker);
@@ -133,7 +176,7 @@ export const MapView: React.FC<MapViewProps> = ({ issues, userRole }) => {
       }
 
     }
-  }, [map, issues, userLocation]);
+  }, [map, issues, userLocation, infoWindow]);
 
   return (
     <>
@@ -141,14 +184,6 @@ export const MapView: React.FC<MapViewProps> = ({ issues, userRole }) => {
         <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">Issues Map View</h2>
         <div ref={mapRef} className="h-[70vh] w-full rounded-md bg-gray-200 dark:bg-gray-700" />
       </div>
-      {/* 
-        The IssueDetailModal is rendered here but controlled from the main App component
-        to keep state management simpler. Clicking a marker here will just set an ID,
-        and the main App will handle showing the modal with the correct data.
-        For this component, we can simply show a placeholder or nothing, as the logic
-        is handled higher up. The click handler sets `selectedIssue` but this state
-        is not used to render the modal directly *from here*.
-      */}
     </>
   );
 };
