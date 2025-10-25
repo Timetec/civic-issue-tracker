@@ -287,7 +287,7 @@ const App: React.FC = () => {
                 {showMapView ? (
                   <MapView 
                     issues={issues.filter(issue => issue.status !== IssueStatus.Resolved)} 
-                    userRole={currentUser.role}
+                    currentUser={currentUser}
                   />
                 ) : (
                   <IssueDashboard issues={issues} onAdminUpdateStatus={handleAdminUpdateStatus} onCitizenResolveIssue={handleCitizenResolveIssue} currentUser={currentUser} onAdminAssignIssue={handleAdminAssignIssue} workers={workers} onAddComment={handleAddComment} />

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import type { CivicIssue, UserRole } from '../types';
+import type { CivicIssue, User } from '../types';
 import { IssueStatus } from '../types';
 
 const issueStatusColors: Record<IssueStatus, string> = {
@@ -11,7 +11,7 @@ const issueStatusColors: Record<IssueStatus, string> = {
 
 interface MapViewProps {
   issues: CivicIssue[];
-  userRole: UserRole;
+  currentUser: Omit<User, 'password'>;
 }
 
 const timeAgo = (date: Date) => {
@@ -31,7 +31,7 @@ const timeAgo = (date: Date) => {
     return pluralize(Math.floor(seconds), "second");
 };
 
-export const MapView: React.FC<MapViewProps> = ({ issues, userRole }) => {
+export const MapView: React.FC<MapViewProps> = ({ issues, currentUser }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   // Fix: Replace google.maps types with `any` to resolve namespace errors.
   const [map, setMap] = useState<any | null>(null);
@@ -94,15 +94,12 @@ export const MapView: React.FC<MapViewProps> = ({ issues, userRole }) => {
       // Draw issue markers
       issues.forEach(issue => {
         const icon = {
-            // A downward-pointing arrow shape, more descriptive than a circle.
-            path: (window as any).google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-            fillColor: issueStatusColors[issue.status],
-            fillOpacity: 1.0,
+            path: (window as any).google.maps.SymbolPath.CIRCLE,
+            fillColor: '#EF4444', // red-500
+            fillOpacity: 1,
             strokeColor: 'white',
             strokeWeight: 1.5,
-            scale: 6,
-            rotation: 90, // Point the arrow down to look like a pin
-            anchor: new (window as any).google.maps.Point(0, 2.5), // Adjust anchor for the new shape
+            scale: 5,
         };
         
         const marker = new (window as any).google.maps.Marker({
@@ -157,6 +154,20 @@ export const MapView: React.FC<MapViewProps> = ({ issues, userRole }) => {
                 icon: userIcon,
                 zIndex: 999, // Ensure user marker is on top
             });
+            
+            newUserMarker.addListener('click', () => {
+              const contentString = `
+                <div style="font-family: Arial, sans-serif; font-size: 14px; color: #333; padding: 5px;">
+                  <h3 style="font-size: 16px; font-weight: 600; margin: 0; color: #1a1a1a;">${currentUser.firstName} ${currentUser.lastName}</h3>
+                  <p style="margin: 4px 0 0 0; color: #666;">(Your Location)</p>
+                </div>`;
+              infoWindow.setContent(contentString);
+              infoWindow.open({
+                anchor: newUserMarker,
+                map,
+              });
+            });
+
             setUserMarker(newUserMarker);
         }
         bounds.extend(userLocation);
@@ -176,7 +187,7 @@ export const MapView: React.FC<MapViewProps> = ({ issues, userRole }) => {
       }
 
     }
-  }, [map, issues, userLocation, infoWindow]);
+  }, [map, issues, userLocation, infoWindow, currentUser]);
 
   return (
     <>
