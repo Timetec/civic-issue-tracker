@@ -28,7 +28,7 @@ export const MapModal: React.FC<MapModalProps> = ({
   const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
-    if (isOpen && mapRef.current && !map) {
+    if (isOpen && mapRef.current && !map && (window as any).google && (window as any).google.maps) {
       // Fix: Cast window to `any` to access the google maps API.
       const newMap = new (window as any).google.maps.Map(mapRef.current, {
         center: initialCenter,
@@ -73,12 +73,12 @@ export const MapModal: React.FC<MapModalProps> = ({
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!searchQuery || !map || !marker) return;
+    if (!searchQuery || !map || !marker || !(window as any).google) return;
 
     setIsSearching(true);
     // Fix: Cast window to `any` to access the google maps geocoder.
     const geocoder = new (window as any).google.maps.Geocoder();
-    geocoder.geocode({ address: searchQuery }, (results, status) => {
+    geocoder.geocode({ address: searchQuery }, (results: any, status: any) => {
       setIsSearching(false);
       if (status === 'OK' && results && results[0]) {
         const location = results[0].geometry.location;

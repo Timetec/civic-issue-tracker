@@ -23,7 +23,7 @@ export const MapView: React.FC<MapViewProps> = ({ issues, userRole }) => {
   const [selectedIssue, setSelectedIssue] = useState<CivicIssue | null>(null);
 
   useEffect(() => {
-    if (mapRef.current && !map) {
+    if (mapRef.current && !map && (window as any).google && (window as any).google.maps) {
       // Fix: Cast window to `any` to access the google maps API.
       const newMap = new (window as any).google.maps.Map(mapRef.current, {
         center: { lat: 34.0522, lng: -118.2437 }, // Default to LA, will be adjusted
@@ -35,7 +35,7 @@ export const MapView: React.FC<MapViewProps> = ({ issues, userRole }) => {
   }, [mapRef, map]);
 
   useEffect(() => {
-    if (map && issues.length > 0) {
+    if (map && issues.length > 0 && (window as any).google && (window as any).google.maps) {
       // Clear old markers
       markers.forEach(marker => marker.setMap(null));
       const newMarkers: any[] = [];

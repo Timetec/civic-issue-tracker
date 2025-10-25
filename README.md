@@ -1,6 +1,6 @@
 # Civic Issue Tracker
 
-![Civic Issue Tracker Hero Image](https://placehold.co/1200x630/6366f1/ffffff/png?text=Civic%20Issue%20Tracker)
+![Civic Issue Tracker Hero Image](./public/assets/hero-image.svg)
 
 **A modern, AI-powered web application that allows citizens to report, track, and view resolutions of civic issues in their neighborhood.**
 

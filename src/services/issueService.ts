@@ -81,7 +81,7 @@ export const addIssue = async (description: string, photos: File[], location: { 
       title,
       description,
       category,
-      photoUrls: photos.length > 0 ? photos.map(p => URL.createObjectURL(p)) : ['https://placehold.co/600x400/cccccc/ffffff/png?text=No+Image'],
+      photoUrls: photos.length > 0 ? photos.map(p => URL.createObjectURL(p)) : ['/assets/placeholder-image.svg'],
       location,
       status: IssueStatus.Pending,
       createdAt: new Date(),
