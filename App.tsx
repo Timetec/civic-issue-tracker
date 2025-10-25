@@ -5,6 +5,7 @@ import { IssueForm } from './components/IssueForm';
 import { IssueDashboard } from './components/IssueDashboard';
 import { UserManagementPage } from './components/UserManagementPage';
 import { ProfileModal } from './components/ProfileModal';
+import { GlobalLoader } from './components/GlobalLoader';
 import * as authService from './services/authService';
 import * as issueService from './services/issueService';
 import * as userService from './services/userService';
@@ -20,7 +21,8 @@ const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<AppView>('LANDING');
   const [issues, setIssues] = useState<CivicIssue[]>([]);
   const [workers, setWorkers] = useState<Omit<User, 'password'>[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isAppLoading, setIsAppLoading] = useState(true);
+  const [isGlobalLoading, setIsGlobalLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -32,7 +34,7 @@ const App: React.FC = () => {
       setWorkers([]);
       return;
     }
-    setIsLoading(true);
+    setIsGlobalLoading(true);
     try {
       let issuesPromise;
       switch (currentUser.role) {
@@ -66,7 +68,7 @@ const App: React.FC = () => {
       setError('Failed to load data. Please try again.');
       console.error(e);
     } finally {
-      setIsLoading(false);
+      setIsGlobalLoading(false);
     }
   }, [currentUser]);
 
@@ -76,7 +78,7 @@ const App: React.FC = () => {
       setCurrentUser(user);
       setCurrentView('DASHBOARD');
     }
-    setIsLoading(false);
+    setIsAppLoading(false);
   }, []);
 
   useEffect(() => {
@@ -86,24 +88,34 @@ const App: React.FC = () => {
   }, [fetchData, currentView]);
   
   const handleLogin = async (email: string, pass: string) => {
-    const user = await authService.loginUser(email, pass);
-    if (user) {
-      setCurrentUser(user);
-      setCurrentView('DASHBOARD');
-      return true;
+    setIsGlobalLoading(true);
+    try {
+      const user = await authService.loginUser(email, pass);
+      if (user) {
+        setCurrentUser(user);
+        setCurrentView('DASHBOARD');
+        return true;
+      }
+      return false;
+    } finally {
+      setIsGlobalLoading(false);
     }
-    return false;
   };
 
   const handleRegister = async (data: { email: string; pass: string; firstName: string; lastName: string; mobileNumber: string; }) => {
+    setIsGlobalLoading(true);
     const { pass, ...rest } = data;
-    const user = await authService.registerUser({ ...rest, password: pass });
-    if (user) {
-      setCurrentUser(user);
-      setCurrentView('DASHBOARD');
-      return true;
+    try {
+      const user = await authService.registerUser({ ...rest, password: pass });
+      if (user) {
+        setCurrentUser(user);
+        setCurrentView('DASHBOARD');
+        return true;
+      }
+      return false;
+    } finally {
+      setIsGlobalLoading(false);
     }
-    return false;
   };
 
   const handleLogout = () => {
@@ -116,6 +128,7 @@ const App: React.FC = () => {
 
   const handleIssueSubmit = async (description: string, photo: File | null, location: { lat: number; lng: number }) => {
     setIsSubmitting(true);
+    setIsGlobalLoading(true);
     try {
       await issueService.addIssue(description, photo, location);
       await fetchData(); // Refresh data
@@ -125,68 +138,88 @@ const App: React.FC = () => {
       console.error(e);
     } finally {
       setIsSubmitting(false);
+      setIsGlobalLoading(false);
     }
   };
 
   const handleAdminUpdateStatus = async (id: string, newStatus: IssueStatus) => {
+    setIsGlobalLoading(true);
     try {
         await issueService.updateIssueStatus(id, newStatus);
         await fetchData();
     } catch (e) {
         alert('Failed to update status.');
+    } finally {
+      setIsGlobalLoading(false);
     }
   };
 
   const handleCitizenResolveIssue = async (id: string, rating: number) => {
-      try {
-        await issueService.citizenResolveIssue(id, rating);
-        await fetchData();
-      } catch(e) {
-        alert((e as Error).message || 'Failed to resolve issue.');
-      }
+    setIsGlobalLoading(true);
+    try {
+      await issueService.citizenResolveIssue(id, rating);
+      await fetchData();
+    } catch(e) {
+      alert((e as Error).message || 'Failed to resolve issue.');
+    } finally {
+      setIsGlobalLoading(false);
+    }
   };
 
   const handleAdminAssignIssue = async (issueId: string, workerEmail: string) => {
+    setIsGlobalLoading(true);
     try {
         await issueService.assignIssue(issueId, workerEmail);
         await fetchData();
     } catch (e) {
         alert('Failed to assign issue.');
+    } finally {
+      setIsGlobalLoading(false);
     }
   };
   
   const handleAddComment = async (issueId: string, text: string) => {
+    setIsGlobalLoading(true);
     try {
         await issueService.addComment(issueId, text);
         await fetchData();
     } catch(e) {
         alert('Failed to add comment.');
+    } finally {
+      setIsGlobalLoading(false);
     }
   };
 
   const handleUpdateProfile = async (data: { firstName: string; lastName: string; mobileNumber: string; }) => {
-      try {
-        const { user, token } = await userService.updateMyProfile(data);
-        authService.updateUserToken(token);
-        setCurrentUser(user);
-        return true;
-      } catch (e) {
-        console.error("Profile update failed", e);
-        return false;
-      }
+    setIsGlobalLoading(true);
+    try {
+      const { user, token } = await userService.updateMyProfile(data);
+      authService.updateUserToken(token);
+      setCurrentUser(user);
+      return true;
+    } catch (e) {
+      console.error("Profile update failed", e);
+      return false;
+    } finally {
+      setIsGlobalLoading(false);
+    }
   };
 
   const handleChangePassword = async (oldPass: string, newPass: string) => {
-      try {
-        await userService.changeMyPassword(oldPass, newPass);
-        return true;
-      } catch (e) {
-        console.error("Password change failed", e);
-        return false;
-      }
+    setIsGlobalLoading(true);
+    try {
+      await userService.changeMyPassword(oldPass, newPass);
+      return true;
+    } catch (e) {
+      console.error("Password change failed", e);
+      return false;
+    } finally {
+      setIsGlobalLoading(false);
+    }
   };
 
   const handleUpdateLocation = async (location: { lat: number; lng: number; }) => {
+    setIsGlobalLoading(true);
     try {
         const updatedUser = await userService.updateMyLocation(location);
         // Refresh the main workers list if admin is viewing
@@ -201,11 +234,13 @@ const App: React.FC = () => {
     } catch (e) {
         console.error("Location update failed", e);
         return false;
+    } finally {
+      setIsGlobalLoading(false);
     }
   };
 
   const renderContent = () => {
-    if (isLoading && !currentUser && currentView !== 'LANDING') {
+    if (isAppLoading && !currentUser && currentView !== 'LANDING') {
         return (
             <div className="flex justify-center items-center h-screen bg-gray-100 dark:bg-gray-900">
                 <Spinner className="h-12 w-12 text-indigo-600"/>
@@ -240,7 +275,7 @@ const App: React.FC = () => {
                         </button>
                     </div>
                 </header>
-                {isLoading ? <div className="flex justify-center mt-12"><Spinner className="h-10 w-10 text-indigo-500"/></div> : <IssueDashboard issues={issues} onAdminUpdateStatus={handleAdminUpdateStatus} onCitizenResolveIssue={handleCitizenResolveIssue} currentUser={currentUser} onAdminAssignIssue={handleAdminAssignIssue} workers={workers} onAddComment={handleAddComment} />}
+                <IssueDashboard issues={issues} onAdminUpdateStatus={handleAdminUpdateStatus} onCitizenResolveIssue={handleCitizenResolveIssue} currentUser={currentUser} onAdminAssignIssue={handleAdminAssignIssue} workers={workers} onAddComment={handleAddComment} />
             </main>
           );
         }
@@ -272,6 +307,7 @@ const App: React.FC = () => {
 
   return (
     <div className="bg-gray-100 dark:bg-gray-900 min-h-screen font-sans">
+      {isGlobalLoading && <GlobalLoader />}
       {renderContent()}
       <ProfileModal 
         isOpen={isProfileModalOpen} 
