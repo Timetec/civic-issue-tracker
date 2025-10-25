@@ -7,14 +7,38 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- 
       IMPORTANT: Google Maps Integration
-      The API key is now managed via an environment variable for security.
-      Vite will replace %VITE_GOOGLE_MAPS_API_KEY% with your actual key during the build process.
+      The Google Maps script is now loaded dynamically in src/index.tsx
+      using an environment variable to ensure the API key is handled securely.
     -->
-    <script src="https://maps.googleapis.com/maps/api/js?key=%VITE_GOOGLE_MAPS_API_KEY%&libraries=marker"></script>
-
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.27.0",
+    "vite": "https://aistudiocdn.com/vite@^7.1.12",
+    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.0"
+  }
+}
+</script>
 </head>
   <body class="bg-gray-100 dark:bg-gray-900">
     <div id="root"></div>
+    <script>
+      // This more robust startup script waits for the next event loop tick to ensure
+      // it runs AFTER the preview environment has injected its conflicting importmap.
+      // This resolves the race condition and allows Vite to take control.
+      function removeConflictingImportMap() {
+        const importMapScript = document.querySelector('script[type="importmap"]');
+        if (importMapScript) {
+          importMapScript.remove();
+          console.log('Successfully removed conflicting importmap.');
+        } else {
+          console.log('Startup script ran, but no importmap was found to remove.');
+        }
+      }
+      setTimeout(removeConflictingImportMap, 0);
     </script>
     <script type="module" src="/src/index.tsx"></script>
   </body>

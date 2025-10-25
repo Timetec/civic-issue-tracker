@@ -1,10 +1,7 @@
-// Fix: Add triple-slash directive to include Vite client types and resolve import.meta.env error.
-/// <reference types="vite/client" />
-
 import React, { useState, useEffect } from 'react';
 import { MapPinIcon } from './Icons';
 
-const MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+const MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY;
 
 interface StaticMapPreviewProps {
   location: { lat: number; lng: number };
