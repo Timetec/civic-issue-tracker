@@ -29,7 +29,7 @@ This project was built to address the common challenge of inefficient and opaque
 *   **Public Transparency Dashboard**: The landing page showcases recently resolved issues, providing transparency to the public on the platform's effectiveness.
 *   **Secure Authentication**: A complete login and registration system.
 *   **Fully Responsive Design**: A clean, modern UI built with Tailwind CSS that works seamlessly on desktop and mobile devices.
-*   **Mock Backend**: Utilizes browser `localStorage` to provide a fully functional, persistent experience without needing a live backend—perfect for a hackathon.
+*   **Backend Abstraction Layer**: The frontend is architected to seamlessly switch between a local `localStorage` mock backend and a live remote backend by setting a single environment variable.
 
 ---
 
@@ -67,17 +67,27 @@ Follow these instructions to get a local copy up and running for development and
     npm install
     ```
 
-3.  **Configure API Keys**
-    This project requires two API keys from Google. You'll need to create a `.env` file in the root of the project to store them.
+3.  **Configure API Keys & Environment**
+    Create a `.env` file in the root of the project to store your configuration.
 
     *   Create the file:
         ```sh
         touch .env
         ```
-    *   Add the following content to your new `.env` file, replacing the placeholders with your actual keys:
+    *   Add the following content to your new `.env` file, replacing the placeholders with your actual keys. **Only include the variables you need for your setup.**
+
         ```env
+        # --- REQUIRED FOR MOCK/LOCAL DEVELOPMENT ---
+        # Used for the client-side Gemini calls in the mock API.
         VITE_GEMINI_API_KEY=YOUR_GEMINI_API_KEY
+        
+        # --- REQUIRED FOR BOTH MODES ---
+        # Used for Google Maps integration.
         VITE_GOOGLE_MAPS_API_KEY=YOUR_GOOGLE_MAPS_API_KEY
+
+        # --- OPTIONAL: FOR CONNECTING TO A REAL BACKEND ---
+        # If this URL is present, the app will make live API calls instead of using the mock.
+        VITE_API_BASE_URL=http://127.0.0.1:5000 
         ```
 
     *   **To get your keys:**
@@ -96,7 +106,80 @@ Follow these instructions to get a local copy up and running for development and
     ```sh
     npm run dev
     ```
-    The application will be available at `http://localhost:5173` (or another port if 5173 is busy).
+    The application will be available at `http://localhost:5173` (or another port if 5173 is busy). By default, it will run using the mock `localStorage` backend.
+
+---
+
+## 🔌 Connecting to a Real Backend
+
+This application is designed to connect to any backend that adheres to the defined API contract below. To switch from the mock `localStorage` mode to a live backend:
+
+1.  **Set the Environment Variable**: Add `VITE_API_BASE_URL` to your `.env` file and set it to the URL of your running backend server (e.g., `http://localhost:5000` for a local Flask server, or your deployed API URL).
+2.  **Restart the Development Server**: Stop and restart `npm run dev` for the new environment variable to be loaded.
+3.  **Secure Gemini API Key**: When using a real backend, the `VITE_GEMINI_API_KEY` is no longer needed on the frontend. The backend server should handle all calls to the Gemini API. You should move the API key to your backend server's environment variables for security.
+
+### API Contract for Backend Implementation
+
+Your backend server (e.g., Python/Flask) must implement the following RESTful endpoints. Authentication is handled via Bearer Tokens (JWT).
+
+#### Authentication (`/api/auth`)
+*   `POST /api/auth/register`
+    *   **Body**: `{ email, password, firstName, lastName, mobileNumber }`
+    *   **Response**: `{ token: "jwt_token", user: { ...userObject } }`
+*   `POST /api/auth/login`
+    *   **Body**: `{ email, password }`
+    *   **Response**: `{ token: "jwt_token", user: { ...userObject } }`
+
+#### Users (`/api/users`)
+*   `GET /api/users` (Admin only)
+    *   **Response**: `[ { ...userObject }, ... ]`
+*   `POST /api/users` (Admin only)
+    *   **Body**: `{ email, password, firstName, lastName, mobileNumber, role, location? }`
+    *   **Response**: `{ ...userObject }`
+*   `GET /api/users/me` (Authenticated users)
+    *   **Response**: `{ ...userObject }`
+*   `PUT /api/users/me` (Authenticated users)
+    *   **Body**: `{ firstName, lastName, mobileNumber }`
+    *   **Response**: `{ ...userObject }`
+*   `PUT /api/users/me/password` (Authenticated users)
+    *   **Body**: `{ oldPassword, newPassword }`
+    *   **Response**: `200 OK`
+*   `PUT /api/users/me/location` (Authenticated users, mainly for Workers)
+    *   **Body**: `{ lat, lng }`
+    *   **Response**: `{ ...userObject }`
+
+#### Issues (`/api/issues`)
+*   `GET /api/issues` (Admin only)
+    *   **Response**: `[ { ...issueObject }, ... ]`
+*   `GET /api/issues/reported` (Citizen only)
+    *   Returns issues reported by the authenticated citizen.
+    *   **Response**: `[ { ...issueObject }, ... ]`
+*   `GET /api/issues/assigned` (Worker only)
+    *   Returns issues assigned to the authenticated worker.
+    *   **Response**: `[ { ...issueObject }, ... ]`
+*   `GET /api/issues/user/:identifier` (Service role only)
+    *   Returns issues for a specific user by email or mobile.
+    *   **Response**: `[ { ...issueObject }, ... ]`
+*   `GET /api/issues/:id` (Authenticated users, with role-based access checks)
+    *   **Response**: `{ ...issueObject }`
+*   `POST /api/issues` (Authenticated users)
+    *   **Body**: `FormData` containing `description` (string), `location` (JSON string `{"lat": number, "lng": number}`), and `photos` (file array).
+    *   **Backend Logic**: The backend should receive this, call the Gemini API for categorization, find the nearest worker, and then create the issue in the database.
+    *   **Response**: `{ ...issueObject }`
+*   `POST /api/issues/:id/comments` (Authorized users)
+    *   **Body**: `{ text: "comment_text" }`
+    *   **Response**: `{ ...issueObject }`
+*   `PUT /api/issues/:id/status` (Admin/Worker only)
+    *   **Body**: `{ status: "NewStatus" }`
+    *   **Response**: `{ ...issueObject }`
+*   `PUT /api/issues/:id/assign` (Admin only)
+    *   **Body**: `{ workerEmail: "worker@test.com" }`
+    *   **Response**: `{ ...issueObject }`
+*   `PUT /api/issues/:id/resolve` (Citizen who reported it only)
+    *   **Body**: `{ rating: 5 }`
+    *   **Response**: `{ ...issueObject }`
+
+---
 
 ## Deployment
 
@@ -104,10 +187,9 @@ This project is configured for easy deployment on platforms like Vercel or Netli
 
 1. Push your code to a Git repository (GitHub, GitLab, etc.).
 2. Import the repository into your hosting provider.
-3. Configure the same environment variables (`VITE_GEMINI_API_KEY` and `VITE_GOOGLE_MAPS_API_KEY`) in your provider's settings.
+3. Configure the environment variables (`VITE_GOOGLE_MAPS_API_KEY` and optionally `VITE_API_BASE_URL` if connecting to a deployed backend) in your provider's settings.
 4. The build command is `npm run build` and the output directory is `dist`. This is usually detected automatically.
 5. Deploy!
-
 ---
 
 ## 🔮 Future Improvements
@@ -116,11 +198,4 @@ This project provides a strong foundation. Here are some potential next steps:
 
 *   **Chatbot for Status Updates**: Implement the hackathon's bonus idea by adding a Gemini-powered chatbot where users can ask, "What's the status of my complaint?"
 *   **Notifications**: Integrate push or email notifications for real-time status updates.
-*   **Full Backend Implementation**: Replace the `localStorage` mock API with a real backend service (e.g., Node.js/Express, Firebase, or Supabase) for a production-ready application.
 *   **Analytics Dashboard**: Provide admins with analytics on issue types, resolution times, and worker performance.
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License - see the `LICENSE.md` file for details.

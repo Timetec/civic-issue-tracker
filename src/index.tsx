@@ -3,7 +3,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 
-const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+const GOOGLE_MAPS_API_KEY = process.env.VITE_GOOGLE_MAPS_API_KEY;
 
 const renderApp = () => {
   const rootElement = document.getElementById('root');
@@ -37,6 +37,6 @@ if (GOOGLE_MAPS_API_KEY) {
     renderApp();
   };
 } else {
-  console.warn("GOOGLE_MAPS_API_KEY environment variable is not set. Map features will be disabled.");
+  console.warn("VITE_GOOGLE_MAPS_API_KEY environment variable is not set. Map features will be disabled.");
   renderApp();
 }
