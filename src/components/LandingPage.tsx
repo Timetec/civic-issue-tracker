@@ -53,9 +53,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, currentU
             <nav className="relative max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6" aria-label="Global">
               <div className="flex items-center flex-1">
                 <div className="flex items-center justify-between w-full md:w-auto">
-                  <a href="#">
-                    <span className="sr-only">CivicVoice</span>
-                    <img className="h-8 w-auto sm:h-10" src="/assets/logo.svg" alt="Logo"/>
+                  <a href="#" className="flex items-center space-x-3">
+                    <img className="h-8 w-auto sm:h-10" src="/assets/logo.svg" alt="CivicVoice Logo"/>
+                    <span className="text-2xl font-bold text-white tracking-tight sm:text-3xl">CivicVoice</span>
                   </a>
                 </div>
               </div>

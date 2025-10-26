@@ -101,7 +101,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onRegister, onBac
         <div className="mx-auto w-full max-w-sm lg:w-96">
           <button onClick={onBackToLanding} className="mb-6 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-500">&larr; Back to Home</button>
           <div>
-            <img className="h-12 w-auto" src="/assets/logo.svg" alt="CivicVoice" />
+            <div className="flex items-center space-x-3">
+              <img className="h-12 w-auto" src="/assets/logo.svg" alt="CivicVoice Logo" />
+              <span className="text-4xl font-extrabold text-gray-900 dark:text-white tracking-tight">CivicVoice</span>
+            </div>
             <h2 className="mt-6 text-3xl font-extrabold text-gray-900 dark:text-white">
               {isLoginView ? 'Welcome back' : 'Create an account'}
             </h2>
