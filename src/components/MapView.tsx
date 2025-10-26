@@ -64,7 +64,7 @@ export const MapView: React.FC<MapViewProps> = ({ issues, currentUser }) => {
       const newMap = new (window as any).google.maps.Map(mapRef.current, {
         center: { lat: 34.0522, lng: -118.2437 }, // Default to LA, will be adjusted
         zoom: 10,
-        mapId: 'CIVIC_ISSUE_TRACKER_MAP',
+        mapId: 'CIVICVOICE_MAP',
         streetViewControl: false, // Remove Pegman
         mapTypeControl: false,
         fullscreenControl: false,

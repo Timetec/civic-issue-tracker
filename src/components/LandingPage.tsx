@@ -54,7 +54,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, currentU
               <div className="flex items-center flex-1">
                 <div className="flex items-center justify-between w-full md:w-auto">
                   <a href="#">
-                    <span className="sr-only">Civic Issue Tracker</span>
+                    <span className="sr-only">CivicVoice</span>
                     <img className="h-8 w-auto sm:h-10" src="/assets/logo.svg" alt="Logo"/>
                   </a>
                 </div>
@@ -177,7 +177,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, currentU
           <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:py-16 lg:px-8">
              <div className="mt-8 border-t border-gray-200 dark:border-gray-700 pt-8 md:flex md:items-center md:justify-between">
               <p className="mt-8 text-base text-gray-400 md:mt-0 md:order-1">
-                &copy; 2024 Civic Issue Tracker. All rights reserved.
+                &copy; 2024 CivicVoice. All rights reserved.
               </p>
             </div>
           </div>

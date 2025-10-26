@@ -1,6 +1,6 @@
-# Civic Issue Tracker
+# CivicVoice
 
-![Civic Issue Tracker Hero Image](./public/assets/hero-image.svg)
+![CivicVoice Hero Image](./public/assets/hero-image.svg)
 
 **A modern, AI-powered web application that allows citizens to report, track, and view resolutions of civic issues in their neighborhood.**
 
