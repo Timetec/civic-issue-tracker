@@ -2,34 +2,43 @@
 
 ![CivicVoice Hero Image](./public/assets/hero-image.svg)
 
-**A modern, AI-powered web application that allows citizens to report, track, and view resolutions of civic issues in their neighborhood.**
+**CivicVoice** is a modern, AI-powered web application that allows citizens to report, track, and view resolutions of civic issues in their neighborhood. It streamlines the entire process from submission to resolution, fostering transparency and community engagement.
 
-This project was built to address the common challenge of inefficient and opaque civic issue reporting. By leveraging modern web technologies and the power of generative AI, this platform streamlines the process from submission to resolution, fostering transparency and community engagement.
+This project is built with a modern frontend stack including **React**, **TypeScript**, and **Tailwind CSS**, powered by **Vite**. It leverages the **Google Gemini API** for AI-powered features and the **Google Maps Platform** for geolocation and interactive maps.
 
 ---
 
 ## ✨ Key Features
 
-### For Citizens
-*   **AI-Powered Reporting**: Describe an issue, and our **Google Gemini** integration automatically suggests a concise title and categorizes it (e.g., Pothole, Graffiti, Streetlight).
-*   **Photo Uploads**: Attach a photo of the issue for clear visual context.
-*   **Interactive Map Location**: Pinpoint the exact location of the issue using an interactive **Google Map** with address search functionality.
-*   **Real-time Status Tracking**: View a personal dashboard of all your reported issues and track their status from `Pending` to `Resolved`.
-*   **Commenting & Interaction**: Communicate with admins or workers by adding comments to your issue reports.
-*   **Confirm Resolution & Rate Service**: Once work is marked as complete, citizens can confirm the resolution and provide a 1-5 star rating, creating a feedback loop.
+This application provides a role-based experience tailored to Citizens, Admins, and Workers.
 
-### For Admins & Workers
-*   **Role-Based Access Control**: A sophisticated system with four distinct user roles: `Citizen`, `Worker`, `Admin`, and `Service`.
-*   **Admin Dashboard**: A comprehensive view of all reported issues. Admins can update issue statuses, manage assignments, and oversee the entire system.
-*   **Worker Dashboard**: Workers see a personalized view of only the issues assigned to them, helping them focus on their tasks.
-*   **Automated Issue Assignment**: New issues are automatically assigned to the nearest available worker based on their registered location.
-*   **User Management**: Admins can create new users (Workers, Service), manage user roles, and set worker locations directly on a map.
+### For Citizens
+*   **AI-Powered Issue Reporting**: Describe an issue, upload photos, and pinpoint the location on a map. Our Google Gemini integration automatically suggests a concise title and categorizes the report (e.g., Pothole, Graffiti, Streetlight).
+*   **Interactive Map**: Use an interactive Google Map to precisely place your issue report. You can use your device's current location or search for an address.
+*   **Personal Dashboard**: View all your reported issues in a clean, card-based layout. Track their status from 'Pending' to 'Resolved'.
+*   **Filter & Search**: Easily filter your reports by status or search for a specific issue by its unique ID.
+*   **Dual View Modes**: Toggle between a standard list view and an interactive map view that shows all unresolved issues in your area, including your own location.
+*   **Detailed Issue Tracking**: Click on any issue to see a full detail view, including all comments, photos, and status history.
+*   **Confirm & Rate**: Once a worker marks an issue as complete, you can confirm the resolution and provide a 1-5 star rating to give feedback on the service.
+*   **Direct Communication**: Add comments to your issue reports to communicate directly with the assigned worker or an administrator.
+*   **AI Chatbot Assistant**: A friendly chatbot is available to quickly check the status of any of your reported issues by simply providing the issue ID.
+
+### For Admins
+*   **Comprehensive Admin Dashboard**: Get a complete overview of all issues reported across the platform.
+*   **Full Issue Control**: Update the status of any issue (e.g., mark as 'In Progress') or re-assign it to a different worker at any time.
+*   **User Management**: Access a dedicated page to view all registered users and their roles.
+*   **Create New Users**: Onboard new 'Worker' or 'Service' level users. When creating a worker, you can set their default location on a map to optimize automatic assignments.
+
+### For Workers
+*   **Personalized Work Queue**: The worker dashboard shows a filtered list of only the issues that are currently assigned to you.
+*   **Task Management**: Update the status of your assigned issues as you work on them, from 'In Progress' to 'For Review' when the job is done.
+*   **Location Management**: Update your own work location in your profile. This location is used by the system to automatically assign you the nearest new reports.
 
 ### Platform Features
-*   **Public Transparency Dashboard**: The landing page showcases recently resolved issues, providing transparency to the public on the platform's effectiveness.
-*   **Secure Authentication**: A complete login and registration system.
+*   **Secure Authentication**: A complete login and registration system for all user roles.
+*   **Role-Based Access**: The UI and available actions dynamically change based on whether you are a Citizen, Worker, or Admin.
 *   **Fully Responsive Design**: A clean, modern UI built with Tailwind CSS that works seamlessly on desktop and mobile devices.
-*   **Backend Abstraction Layer**: The frontend is architected to seamlessly switch between a local `localStorage` mock backend and a live remote backend by setting a single environment variable.
+*   **Backend Abstraction Layer**: Architected to seamlessly switch between a local `localStorage` mock backend and a live remote backend by changing a single environment variable.
 
 ---
 
@@ -194,12 +203,3 @@ This project is configured for easy deployment on platforms like Vercel or Netli
 3. Configure the environment variables (`VITE_GOOGLE_MAPS_API_KEY` and optionally `VITE_API_BASE_URL` if connecting to a deployed backend) in your provider's settings.
 4. The build command is `npm run build` and the output directory is `dist`. This is usually detected automatically.
 5. Deploy!
----
-
-## 🔮 Future Improvements
-
-This project provides a strong foundation. Here are some potential next steps:
-
-*   **Chatbot for Status Updates**: Implement the hackathon's bonus idea by adding a Gemini-powered chatbot where users can ask, "What's the status of my complaint?"
-*   **Notifications**: Integrate push or email notifications for real-time status updates.
-*   **Analytics Dashboard**: Provide admins with analytics on issue types, resolution times, and worker performance.
